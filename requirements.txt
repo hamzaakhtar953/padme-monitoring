@@ -1,0 +1,6 @@
+fastapi[standard]==0.115.5
+
+# Add version in the following packages
+rdflib
+rdflib_sqlalchemy
+psycopg2
