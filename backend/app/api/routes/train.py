@@ -1,14 +1,11 @@
-from typing import Annotated, Literal
+from fastapi import APIRouter, Response
+from rdflib import FOAF
 
-from fastapi import APIRouter, Depends, Response
-from rdflib import Graph, URIRef, FOAF, Namespace, RDF
+from app.api.deps import GraphDep
+from app.core.database import NPHT, NTrain, NStation
+from app.models import TrainMetadataModel
 
-from core.log_config import logger
-from database import rdf_graph, NPHT, NTrain, NStation
-from models import TrainMetadataModel
-
-router = APIRouter(prefix="/train", tags=["train"])
-GraphDep = Annotated[Graph, Depends(rdf_graph.get_graph)]
+router = APIRouter()
 
 
 # data_graph = {
