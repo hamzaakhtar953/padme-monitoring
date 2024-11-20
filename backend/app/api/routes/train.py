@@ -1,55 +1,58 @@
-from fastapi import APIRouter, Response
-from rdflib import FOAF
+from enum import Enum
+from typing import Annotated
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, Path, Response, status
+from rdflib import Graph, Literal
+from rdflib.plugins.sparql import prepareQuery
 
 from app.api.deps import GraphDep
-from app.core.database import NPHT, NTrain, NStation
-from app.models import TrainMetadataModel
+from app.core.database import PHT, TrainNS, StationNS
+from app.models import TrainMetadataBase as TrainMetadataCreate, TrainMetadataUpdate
 
 router = APIRouter()
 
 
-# data_graph = {
-#     "@context": {"@vocab": "http://schema.org/"},
-#     "@id": "http://example.org/#Bob",
-#     "@type": "Person",
-#     "givenName": "Muhammad Hamza",
-#     "familyName": "Akhtar",
-#     "birthDate": "1995-15-12",
-#     "deathDate": "1999-15-12",
-#     "address": {
-#         "@id": "http://example.org/ns#BobsAddress",
-#         "streetAddress": "1600 Amphitheatre Pkway",
-#         "postalCode": 9404,
-#     },
-# }
-
-
-# {
-#     "identifier": "metrics-csv",
-#     "title": "Metrics CSV",
-#     "creator": "Hamza Akhtar",
-#     "description": "A Big Description of the Train",
-#     "version": "1.0",
-#     "created_at": "2024-11-19T23:39:29.355726",
-# }
-
-
-@router.post("/")
-async def add_train_metadata(graph: GraphDep, metadata: TrainMetadataModel):
-    payload = {
-        "@context": {"pht": str(NPHT), "train": str(NTrain)},
-        "@id": f"{NTrain}{metadata.identifier}",
-        "@type": "pht:Train",
-        "pht:identifier": metadata.identifier,
-        "pht:title": metadata.title,
-        "pht:creator": metadata.creator,
-        "pht:description": metadata.description,
-        "pht:version": metadata.version,
-        "pht:createdAt": metadata.created_at,
+# Select all triples of subject (?sub) where subject is of type (?uri)
+query_subject_properties = prepareQuery(
+    """
+    SELECT ?sub ?pred ?obj
+    WHERE {
+        ?sub a ?uri .
+        ?sub ?pred ?obj .
     }
+    """
+)
 
-    graph.parse(data=payload, format="json-ld")
-    return payload
+
+class ResponseType(str, Enum):
+    default = "default"
+    jsonld = "json-ld"
+    turtle = "turtle"
+
+
+@router.get("/query-triples")
+async def query_triples(graph: GraphDep):
+    query = """
+        SELECT ?train ?property ?value
+        WHERE {
+            ?train a pht:Train ;
+                ?property ?value .
+        }
+    """
+
+    query_graph = Graph()
+    query_result = graph.query(query, initNs={"pht": PHT})
+    for row in query_result:
+        query_graph.add(row)
+
+    context = {"pht": PHT, "train": TrainNS}
+    jsonld_payload = query_graph.serialize(format="json-ld", indent=4, context=context)
+
+    # Delete temporary graph
+    del query_graph
+
+    return Response(jsonld_payload, media_type="application/json+ld")
 
 
 @router.get("/total-triples")
@@ -57,82 +60,156 @@ async def total_triples(graph: GraphDep) -> dict:
     return {"total_triples": len(graph)}
 
 
-@router.get("/query-triples")
-async def query_triples(graph: GraphDep):
-    query = """
-        SELECT ?train ?creator
-        WHERE {
-            ?train a pht:Train ;
-               pht:creator ?creator .
-        }
-    """
+@router.get("/")
+async def get_all_trains(graph: GraphDep):
+    query_graph = Graph()
+    query_result = graph.query(
+        query_subject_properties, initBindings={"uri": PHT.Train}
+    )
+    for row in query_result:
+        query_graph.add(row)
 
-    response = []
-    result = graph.query(query, initNs={"pht": NPHT})
-    for row in result:
-        response.append(f"Train: {row.train}, Creator: {row.creator}")
+    context = {"pht": PHT, "train": TrainNS}
+    jsonld_payload = query_graph.serialize(format="json-ld", indent=4, context=context)
 
-    # return Response(
-    #     graph.query(query, initNs={"pht": NPHT}).serialize(format="json"),
-    #     media_type="application/json",
-    # )
+    # Delete temporary graph
+    del query_graph
+    return Response(jsonld_payload, media_type="application/json+ld")
 
-    return response
+
+# GET Train metadata by ID
+@router.get("/{train_id}", status_code=status.HTTP_200_OK)
+async def get_train_metadata(
+    graph: GraphDep,
+    train_id: Annotated[str, Path(min_length=5)],
+    response_type: ResponseType = ResponseType.default,
+):
+    rdf_triple = (TrainNS[train_id], None, None)
+
+    # Check if Train URI exists
+    if rdf_triple not in graph:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Train ({train_id}) metadata not found",
+        )
+
+    # Return default response
+    if response_type is ResponseType.default:
+        train_metadata = {"id": train_id}
+        for pred, obj in graph.predicate_objects(TrainNS[train_id]):
+            train_metadata.update({str(pred): str(obj)})
+
+        return train_metadata
+
+    # Return json-ld response
+    subject_graph = Graph()
+    for sub, pred, obj in graph.triples(rdf_triple):
+        subject_graph.add((sub, pred, obj))
+
+    context = {"pht": PHT, "train": TrainNS}
+    jsonld_payload = subject_graph.serialize(
+        format="json-ld", indent=4, context=context
+    )
+    # Delete temporary graph
+    del subject_graph
+
+    return Response(jsonld_payload, media_type="application/json+ld")
+
+
+# Create new Train
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_train_metadata(graph: GraphDep, metadata: TrainMetadataCreate):
+    rdf_triple = (TrainNS[metadata.identifier], None, None)
+    if rdf_triple in graph:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Metadata already exists for Train ({metadata.identifier})",
+        )
+
+    train_id = f"{metadata.identifier}-{uuid4()}"
+    jsonld_payload = {
+        "@context": {"pht": str(PHT), "train": str(TrainNS)},
+        "@id": f"{TrainNS}{metadata.identifier}",
+        "@type": "pht:Train",
+        "pht:identifier": train_id,
+        "pht:title": metadata.title,
+        "pht:creator": metadata.creator,
+        "pht:description": metadata.description,
+        "pht:version": metadata.version,
+        "pht:createdAt": metadata.createdAt,
+        "pht:updatedAt": metadata.updatedAt,
+    }
+
+    graph.parse(
+        data=jsonld_payload,
+        format="json-ld",
+    )
+    return jsonld_payload
+
+
+@router.put("/{train_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def update_train_metadata(
+    graph: GraphDep,
+    metadata: TrainMetadataUpdate,
+    train_id: Annotated[str, Path(min_length=5)],
+):
+    rdf_triple = (TrainNS[train_id], None, None)
+
+    # Check if Train URI triples exists
+    if rdf_triple not in graph:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Train ({train_id}) metadata not found",
+        )
+
+    for pred, _ in graph.predicate_objects(TrainNS[train_id]):
+        predicate_name = pred.n3(graph.namespace_manager).split(":")[-1]
+        new_value = metadata.model_dump().get(predicate_name)
+
+        # If property does not exists in request body, skip the iteration.
+        # There can be many properties such as rdf:type etc.
+        if not new_value:
+            continue
+
+        # Update triples one by one
+        graph.set((TrainNS[train_id], pred, Literal(new_value)))
+
+
+# @router.get("/query-triples")
+# async def query_triples(graph: GraphDep):
+#     # query = """
+#     #     SELECT ?train ?creator
+#     #     WHERE {
+#     #         ?train a pht:Train ;
+#     #            pht:creator ?creator .
+#     #     }
+#     # """
+
+#     query = """
+#     SELECT ?train ?p ?o
+#     WHERE {
+#         ?train a pht:Train ;
+#             ?p ?o .
+#     }
+#     """
+
+#     # response = []
+#     # result = graph.query(query, initNs={"pht": PHT})
+#     # for row in result:
+#     #     response.append(f"Train: {row.train}, Creator: {row.creator}")
+
+#     return Response(
+#         graph.query(query, initNs={"pht": PHT}).serialize(format="json"),
+#         media_type="application/json",
+#     )
+
+#     #     return Response(
+#     #         graph.query(query).serialize(format="json"), media_type="application/json"
+#     #     )
+
+#     # return response
 
 
 @router.get("/clear")
 async def remove_all_triples(graph: GraphDep):
     graph.remove((None, None, None))
-
-
-# @app.get("/metadata/train/add")
-# async def add_train_metadata(graph: GraphDep):
-#     pass
-
-
-# @app.get("/test/create-triples")
-# async def create_triples(graph: GraphDep):
-#     EX = Namespace("http://example.org/#")
-#     graph.bind("ex", EX)
-
-#     graph.add((EX.Hamza, RDF.type, FOAF.Person))
-#     graph.add(
-#         (EX.Hamza, FOAF.name, Literal("Muhammad Hamza Akhtar", datatype=XSD.string))
-#     )
-#     graph.add((EX.Hamza, FOAF.age, Literal(28)))
-#     graph.add((EX.Hamza, FOAF.knows, EX.Ayesha))
-
-#     graph.add((EX.Ayesha, RDF.type, FOAF.Person))
-#     graph.add((EX.Ayesha, FOAF.name, Literal("Ayesha Ali")))
-
-
-# @app.get("/test/total-triples")
-# async def total_triples(graph: GraphDep) -> dict:
-#     return {"total_triples": len(graph)}
-
-
-# @app.get("/test/query-triples")
-# async def query_triples(graph: GraphDep):
-#     query = """
-#         SELECT ?person ?name ?age
-#         WHERE {
-#             ?person a foaf:Person ;
-#                     foaf:name ?name .
-#         }
-#     """
-
-#     return Response(
-#         graph.query(query).serialize(format="json"), media_type="application/json"
-#     )
-
-
-@router.get("/")
-# async def get_triples(graph: GraphDep, format: Literal["ttl", "json-ld"] = "ttl"):
-async def get_triples(graph: GraphDep):
-    context = {"foaf": str(FOAF)}
-    # return Response(
-    #     graph.serialize(
-    #         format="json-ld", context=context, media_type="application/json+ld"
-    #     )
-    # )
-    return Response(graph.serialize(), media_type="text/turtle")

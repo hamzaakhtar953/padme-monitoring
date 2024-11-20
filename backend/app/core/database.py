@@ -15,9 +15,10 @@ DATABASE_URL = URL.create(
     database="TestDB",
 )
 
-NPHT = Namespace("http://schema.padme-analytics.de/#")
-NTrain = Namespace("http://monitoring.padme-analytics.de/train/")
-NStation = Namespace("http://monitoring.padme-analytics.de/station/")
+# TODO: Add 's' at the end of Train and Station Namespace
+PHT = Namespace("http://schema.padme-analytics.de/#")
+TrainNS = Namespace("http://monitoring.padme-analytics.de/train/")
+StationNS = Namespace("http://monitoring.padme-analytics.de/station/")
 
 
 class RDFGraphSingleton:
@@ -38,7 +39,7 @@ class RDFGraphSingleton:
     def get_graph(self) -> Graph:
         return self.rdf_graph
 
-    def close_graph(self):
+    def close_graph(self) -> None:
         logger.debug("Closing the RDF graph database...")
         self.rdf_graph.close()
 
