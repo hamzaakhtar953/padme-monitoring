@@ -21,9 +21,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to PADME Monitoring"}
+@app.get("/healthy")
+async def health_check():
+    return {"status": "healthy"}
 
 
 # Include all API routes
