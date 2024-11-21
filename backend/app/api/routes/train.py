@@ -1,28 +1,17 @@
 from enum import Enum
+import json
 from typing import Annotated
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Response, status
-from rdflib import Graph, Literal
-from rdflib.plugins.sparql import prepareQuery
+from rdflib import Graph, Literal, RDF
 
 from app.api.deps import GraphDep
 from app.core.database import PHT, TrainNS, StationNS
 from app.models import TrainMetadataBase as TrainMetadataCreate, TrainMetadataUpdate
+from app.utils import query_subject_properties
 
 router = APIRouter()
-
-
-# Select all triples of subject (?sub) where subject is of type (?uri)
-query_subject_properties = prepareQuery(
-    """
-    SELECT ?sub ?pred ?obj
-    WHERE {
-        ?sub a ?uri .
-        ?sub ?pred ?obj .
-    }
-    """
-)
 
 
 class ResponseType(str, Enum):
@@ -31,54 +20,59 @@ class ResponseType(str, Enum):
     turtle = "turtle"
 
 
-@router.get("/query-triples")
-async def query_triples(graph: GraphDep):
-    query = """
-        SELECT ?train ?property ?value
-        WHERE {
-            ?train a pht:Train ;
-                ?property ?value .
-        }
-    """
-
-    query_graph = Graph()
-    query_result = graph.query(query, initNs={"pht": PHT})
-    for row in query_result:
-        query_graph.add(row)
-
-    context = {"pht": PHT, "train": TrainNS}
-    jsonld_payload = query_graph.serialize(format="json-ld", indent=4, context=context)
-
-    # Delete temporary graph
-    del query_graph
-
-    return Response(jsonld_payload, media_type="application/json+ld")
+@router.get(
+    path="/count",
+    summary="Count all triples of type [rdf:type pht:Train]",
+    status_code=status.HTTP_200_OK,
+)
+async def get_triple_count(graph: GraphDep) -> dict:
+    triple_count = len(set(graph.subjects(RDF.type, PHT.Train)))
+    return {"total_triples": triple_count}
 
 
-@router.get("/total-triples")
-async def total_triples(graph: GraphDep) -> dict:
-    return {"total_triples": len(graph)}
+@router.get("/clear")
+async def remove_all_triples(graph: GraphDep):
+    graph.remove((None, None, None))
 
 
 @router.get("/")
-async def get_all_trains(graph: GraphDep):
+async def get_all_trains(
+    graph: GraphDep,
+    response_type: ResponseType = ResponseType.jsonld,
+    offset: int = 0,
+    limit: int = 10,
+):
     query_graph = Graph()
     query_result = graph.query(
-        query_subject_properties, initBindings={"uri": PHT.Train}
+        query_subject_properties(),
+        initBindings={"uri": PHT.Train},
     )
     for row in query_result:
         query_graph.add(row)
 
+    # Return turtle response
+    if response_type is ResponseType.turtle:
+        query_graph.bind("pht", PHT)
+        query_graph.bind("train", TrainNS)
+        ttl_payload = query_graph.serialize()
+
+        del query_graph
+        return Response(ttl_payload, media_type="text/turtle")
+
+    # Return json-ld response
     context = {"pht": PHT, "train": TrainNS}
-    jsonld_payload = query_graph.serialize(format="json-ld", indent=4, context=context)
+    jsonld_payload: dict = json.loads(
+        query_graph.serialize(format="json-ld", indent=4, context=context)
+    )
+    jsonld_payload["@graph"] = jsonld_payload["@graph"][offset : offset + limit]
 
     # Delete temporary graph
     del query_graph
-    return Response(jsonld_payload, media_type="application/json+ld")
+    return jsonld_payload
 
 
-# GET Train metadata by ID
-@router.get("/{train_id}", status_code=status.HTTP_200_OK)
+# Get Train metadata by ID
+@router.get("/{train_id}")
 async def get_train_metadata(
     graph: GraphDep,
     train_id: Annotated[str, Path(min_length=5)],
@@ -93,7 +87,7 @@ async def get_train_metadata(
             detail=f"Train ({train_id}) metadata not found",
         )
 
-    # Return default response
+    # Return default response with train metadata as a dictionary
     if response_type is ResponseType.default:
         train_metadata = {"id": train_id}
         for pred, obj in graph.predicate_objects(TrainNS[train_id]):
@@ -173,43 +167,3 @@ async def update_train_metadata(
 
         # Update triples one by one
         graph.set((TrainNS[train_id], pred, Literal(new_value)))
-
-
-# @router.get("/query-triples")
-# async def query_triples(graph: GraphDep):
-#     # query = """
-#     #     SELECT ?train ?creator
-#     #     WHERE {
-#     #         ?train a pht:Train ;
-#     #            pht:creator ?creator .
-#     #     }
-#     # """
-
-#     query = """
-#     SELECT ?train ?p ?o
-#     WHERE {
-#         ?train a pht:Train ;
-#             ?p ?o .
-#     }
-#     """
-
-#     # response = []
-#     # result = graph.query(query, initNs={"pht": PHT})
-#     # for row in result:
-#     #     response.append(f"Train: {row.train}, Creator: {row.creator}")
-
-#     return Response(
-#         graph.query(query, initNs={"pht": PHT}).serialize(format="json"),
-#         media_type="application/json",
-#     )
-
-#     #     return Response(
-#     #         graph.query(query).serialize(format="json"), media_type="application/json"
-#     #     )
-
-#     # return response
-
-
-@router.get("/clear")
-async def remove_all_triples(graph: GraphDep):
-    graph.remove((None, None, None))
