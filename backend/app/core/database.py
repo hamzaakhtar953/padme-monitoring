@@ -18,7 +18,11 @@ DATABASE_URL = URL.create(
 # TODO: Add 's' at the end of Train and Station Namespace
 PHT = Namespace("http://schema.padme-analytics.de/#")
 TrainNS = Namespace("http://monitoring.padme-analytics.de/train/")
-StationNS = Namespace("http://monitoring.padme-analytics.de/station/")
+StationNS = Namespace("http://monitoring.padme-analytics.de/stations/")
+JobNS = Namespace("http://monitoring.padme-analytics.de/jobs/")
+MemoryNS = Namespace("http://monitoring.padme-analytics.de/memory/")
+CpuNS = Namespace("http://monitoring.padme-analytics.de/cpu/")
+NetworkNS = Namespace("http://monitoring.padme-analytics.de/network/")
 
 
 class RDFGraphSingleton:
