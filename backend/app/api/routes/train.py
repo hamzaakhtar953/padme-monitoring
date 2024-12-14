@@ -13,14 +13,6 @@ from app.utils import get_triple_count, ResponseType
 router = APIRouter()
 
 
-"""
-* This should be higlued
-! Deprecated
-? What is this
-TODO: This is a todo for this file
-"""
-
-
 @router.get(
     path="/count",
     summary="Count all triples of type [rdf:type pht:Train]",
@@ -42,7 +34,7 @@ async def get_all_trains(
     offset: int = 0,
     limit: int = 10,
 ):
-    return crud.get_triples(
+    return crud.get_resources(
         graph=graph,
         response_type=response_type,
         subject=PHT.Train,
@@ -60,7 +52,7 @@ async def get_train_metadata(
     train_id: Annotated[str, Path(min_length=5)],
     response_type: ResponseType = ResponseType.default,
 ):
-    return crud.get_triple_metadata(
+    return crud.get_resource_metadata(
         graph=graph,
         response_type=response_type,
         subject_id=train_id,

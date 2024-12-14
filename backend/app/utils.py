@@ -22,7 +22,6 @@ class JobState(str, Enum):
     finished = "finished"
 
 
-# class JobStateURI(Enum):
 class JobStateURI(Enum):
     idle = PHT.trainStateIdle
     transmission = PHT.trainStateTransmission

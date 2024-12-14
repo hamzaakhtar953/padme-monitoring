@@ -27,7 +27,7 @@ async def get_all_stations(
     offset: int = 0,
     limit: int = 10,
 ):
-    return crud.get_triples(
+    return crud.get_resources(
         graph=graph,
         response_type=response_type,
         subject=PHT.Station,
@@ -44,7 +44,7 @@ async def get_station_metadata(
     station_id: Annotated[str, Path(min_length=3)],
     response_type: ResponseType = ResponseType.default,
 ):
-    return crud.get_triple_metadata(
+    return crud.get_resource_metadata(
         graph=graph,
         response_type=response_type,
         subject_id=station_id,

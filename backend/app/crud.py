@@ -8,7 +8,7 @@ from app.core.logger import logger
 from app.utils import query_subject_properties, ResponseType
 
 
-def get_triples(
+def get_resources(
     graph: Graph,
     response_type: str,
     subject: URIRef,
@@ -16,6 +16,7 @@ def get_triples(
     prefix: str,
     offset: int,
     limit: int,
+    extra_context: dict = {},
 ):
     result_graph = Graph()
     query_result = graph.query(
@@ -33,7 +34,7 @@ def get_triples(
         response = result_graph.serialize()
         return Response(response, media_type="text/turtle")
 
-    context = {"pht": PHT, prefix: namespace}
+    context = {"pht": PHT, prefix: namespace, **extra_context}
     response = json.loads(
         result_graph.serialize(format="json-ld", indent=4, context=context)
     )
@@ -44,7 +45,7 @@ def get_triples(
     return response
 
 
-def get_triple_metadata(
+def get_resource_metadata(
     graph: Graph, response_type: str, subject_id: str, namespace: Namespace, prefix: str
 ):
     triple = (namespace[subject_id], None, None)

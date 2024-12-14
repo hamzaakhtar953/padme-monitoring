@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Body, status
+
 from rdflib.collection import Collection
 from rdflib.namespace import RDF
 
@@ -22,23 +23,6 @@ from app.utils import (
 router = APIRouter()
 
 
-"""
-{
-  "identifier": "44bc00a0-9208-11ef-a539-579e5c650fb5",
-  "train_id": "hello-world",
-  "description": "Executing train on two stations e.g. Klee and Bruegel for statistical analysis",
-  "creator": "Hamza Akhtar",
-  "plannedRoute": [
-    "Klee",
-    "Bruegel"
-  ],
-  "currentStation": "Klee",
-  "createdAt": "2024-12-10T13:16:24.373783",
-  "updatedAt": "2024-12-10T13:16:24.373787"
-}
-"""
-
-
 @router.get("/")
 async def get_jobs(
     graph: GraphDep,
@@ -47,7 +31,7 @@ async def get_jobs(
     limit: int = 10,
 ):
 
-    return crud.get_triples(
+    return crud.get_resources(
         graph=graph,
         response_type=response_type,
         subject=PHT.TrainExecution,
@@ -55,7 +39,14 @@ async def get_jobs(
         prefix="job",
         offset=offset,
         limit=limit,
+        extra_context={"station": StationNS, "train": TrainNS},
     )
+
+
+@router.get("/state")
+async def get_jobs_count_by_state(graph: GraphDep, state: JobState):
+    total_subjects = len(set(graph.subjects(PHT.state, JobStateURI[state].value)))
+    return {"total": total_subjects}
 
 
 @router.get("/{job_id}")
@@ -65,7 +56,7 @@ async def get_job_metadata(
     response_type: ResponseType = ResponseType.default,
 ):
 
-    return crud.get_triple_metadata(
+    return crud.get_resource_metadata(
         graph=graph,
         response_type=response_type,
         subject_id=job_id,
@@ -83,6 +74,10 @@ async def create_job_metadata(graph: GraphDep, metadata: JobMetadataBase):
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Metadata already exists for Job ({metadata.identifier})",
         )
+
+    """
+    TODO: Check if current station is in planned route. Throw an error if not.
+    """
 
     # Adding a no consumption memory event to initialize the collection in job
     memory_event_id = str(uuid4())
