@@ -1,5 +1,7 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
+
 from keycloak import KeycloakOpenID
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -8,6 +10,17 @@ class Settings(BaseSettings):
         env_file="../.env",
         extra="ignore",
     )
+
+    ENVIRONMENT: Literal["local", "production"] = "local"
+
+    PROJECT_NAME: str
+    DOMAIN: str
+
+    DB_URL_DATABASE: str
+    DB_URL_HOST: str
+    DB_URL_PORT: int
+    DB_USERNAME: str
+    DB_PASSWORD: str
 
     KEYCLOAK_SERVER_URL: str
     KEYCLOAK_REALM: str

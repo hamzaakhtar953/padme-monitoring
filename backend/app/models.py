@@ -10,7 +10,11 @@ version_regex = "^(0|[1-9]|10)\\.(0|[1-9]|10)\\.(0|[1-9]|10)$"
 
 
 class TrainMetadataBase(BaseModel):
-    # TODO: use uuid.UUID instead
+    """
+    TODO: use uuid.UUID for identifier instead
+    * Reference: https://github.com/fastapi/full-stack-fastapi-template/blob/master/backend/app/models.py
+    """
+
     identifier: str = Field(min_length=5, max_length=50)
     creator: str = Field(min_length=3, max_length=50)
     title: str = Field(min_length=5, max_length=50)

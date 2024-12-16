@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Body, status
-
 from rdflib.collection import Collection
 from rdflib.namespace import RDF
 

@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from rdflib_sqlalchemy import registerplugins
 
-from app.api.main import api_router
+from app.core.config import settings
 from app.core.database import graph_singleton
-from app.core.logger import logger
+from app.api.main import api_router
 
 
 @asynccontextmanager
@@ -14,11 +14,10 @@ async def lifespan(app: FastAPI):
     registerplugins()
     yield
     # Add cleanup functions here before application shutdown
-    logger.warning("Shutting down application and closing database connections")
     graph_singleton.close_graph()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 
 @app.get("/healthy")
