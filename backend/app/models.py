@@ -8,48 +8,84 @@ from app.utils import MetricType
 
 version_regex = "^(0|[1-9]|10)\\.(0|[1-9]|10)\\.(0|[1-9]|10)$"
 
+# * The properties below need to match the ones in PHT metadata schema.
+# * Therefore, instead of using python's snailcase, we will use the camelcase.
+# * i.e. instead of created_at, we use createdAt.
+
 
 class TrainMetadataBase(BaseModel):
-    """
-    TODO: use uuid.UUID for identifier instead
-    * Reference: https://github.com/fastapi/full-stack-fastapi-template/blob/master/backend/app/models.py
-    """
-
     identifier: str = Field(min_length=5, max_length=50)
     creator: str = Field(min_length=3, max_length=50)
+    publisher: str = Field(min_length=3, max_length=50)
     title: str = Field(min_length=5, max_length=50)
     description: str = Field(min_length=10, max_length=200)
+    analysisPurpose: str = Field(min_length=10, max_length=200)
     version: str = Field(pattern=version_regex, default="1.0.0")
     createdAt: datetime = datetime.now()
     updatedAt: datetime = datetime.now()
 
 
 class TrainMetadataUpdate(BaseModel):
-    creator: str | None = Field(min_length=3, max_length=50, default=None)
+    publisher: str | None = Field(min_length=3, max_length=50, default=None)
     title: str | None = Field(min_length=5, max_length=50, default=None)
     description: str | None = Field(min_length=10, max_length=200, default=None)
+    analysisPurpose: str | None = Field(min_length=10, max_length=200, default=None)
     version: str | None = Field(pattern=version_regex, default=None)
     updatedAt: datetime = datetime.now()
 
 
-class JobMetadataBase(BaseModel):
-    # TODO: use uuid.UUID instead
-    identifier: str = Field(min_length=5, max_length=50)
-    train_id: str = Field(min_length=3, max_length=50)
+class StationMetadataBase(BaseModel):
+    identifier: uuid.UUID
+    title: str = Field(max_length=50)
+    stationOwner: str = Field(min_length=3, max_length=50)
+    responsibleForStation: str = Field(min_length=3, max_length=50)
     description: str = Field(min_length=10, max_length=200)
+    latitude: str
+    longitude: str
+    hasGPUSupport: bool = False
+    totalGPUPower: str
+    totalCPUCores: int
+    totalRAM: str
+    totalDiskSpace: str
+    hasInternetConnectivity: bool
+    networkBandwidth: str
+    createdAt: datetime = datetime.now()
+    updatedAt: datetime = datetime.now()
+
+
+class StationMetadataUpdate(BaseModel):
+    title: str | None = Field(max_length=50, default=None)
+    stationOwner: str | None = Field(min_length=3, max_length=50, default=None)
+    responsibleForStation: str | None = Field(min_length=3, max_length=50, default=None)
+    description: str | None = Field(min_length=10, max_length=200, default=None)
+    latitude: str | None = None
+    longitude: str | None = None
+    hasGPUSupport: bool | None = False
+    totalGPUPower: str | None = None
+    totalCPUCores: int | None = None
+    totalRAM: str | None = None
+    totalDiskSpace: str | None = None
+    hasInternetConnectivity: bool | None = None
+    networkBandwidth: str | None = None
+    updatedAt: datetime | None = datetime.now()
+
+
+class JobMetadataBase(BaseModel):
+    identifier: uuid.UUID
+    description: str = Field(min_length=10, max_length=200)
+    trainId: str = Field(min_length=3, max_length=50)
+    currentStation: str
     creator: str = Field(min_length=3, max_length=50)
     plannedRoute: list[Annotated[str, Field(min_length=3, max_length=50)]] = Field(
         min_length=1
     )
-    currentStation: str
     createdAt: datetime = datetime.now()
     updatedAt: datetime = datetime.now()
 
 
 class JobMetricMetadataCreate(BaseModel):
     metric_type: MetricType = Field(default=MetricType.cpu)
-    job_id: str = Field(min_length=3, max_length=50)
-    station_id: str = Field(min_length=3, max_length=50)
+    station_id: uuid.UUID
     value: str = Field(min_length=1, max_length=50)
     timestamp: datetime = datetime.now()
 

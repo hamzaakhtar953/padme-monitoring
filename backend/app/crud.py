@@ -4,7 +4,6 @@ from fastapi import Response, HTTPException, status
 from rdflib import Graph, Namespace, URIRef
 
 from app.core.database import PHT
-from app.core.logger import logger
 from app.utils import query_subject_properties, ResponseType
 
 
@@ -46,17 +45,22 @@ def get_resources(
 
 
 def get_resource_metadata(
-    graph: Graph, response_type: str, subject_id: str, namespace: Namespace, prefix: str
+    graph: Graph,
+    response_type: str,
+    subject_id: str,
+    namespace: Namespace,
+    prefix: str,
 ):
     triple = (namespace[subject_id], None, None)
 
-    # Check if Train URI exists
+    # Check if URI exists
     if triple not in graph:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"{prefix} ({subject_id}) metadata not found",
         )
 
+    # TODO: This is never reached since we already defined json response in parent GET by id function.
     # Return default response with train metadata as a dictionary
     if response_type is ResponseType.default:
         metadata = {"id": subject_id}

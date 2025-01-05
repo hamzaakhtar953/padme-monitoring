@@ -1,8 +1,7 @@
 from typing import Annotated
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, status
-from rdflib import Literal
+from rdflib import Literal, RDF
 
 from app import crud
 from app.api.deps import GraphDep
@@ -30,19 +29,39 @@ async def remove_all_triples(graph: GraphDep):
 @router.get("/")
 async def get_all_trains(
     graph: GraphDep,
-    response_type: ResponseType = ResponseType.jsonld,
+    response_type: ResponseType = ResponseType.default,
     offset: int = 0,
     limit: int = 10,
 ):
-    return crud.get_resources(
-        graph=graph,
-        response_type=response_type,
-        subject=PHT.Train,
-        namespace=TrainNS,
-        prefix="train",
-        offset=offset,
-        limit=limit,
-    )
+    if response_type is not ResponseType.default:
+        return crud.get_resources(
+            graph=graph,
+            response_type=response_type,
+            subject=PHT.Train,
+            namespace=TrainNS,
+            prefix="train",
+            offset=offset,
+            limit=limit,
+        )
+
+    # Default JSON response
+    trains = []
+    for subject in graph.subjects(RDF.type, PHT.Train):
+        trains.append(
+            {
+                "identifier": str(graph.value(subject, PHT.identifier)),
+                "title": str(graph.value(subject, PHT.title)),
+                "creator": str(graph.value(subject, PHT.creator)),
+                "publisher": str(graph.value(subject, PHT.publisher)),
+                "description": str(graph.value(subject, PHT.description)),
+                "createdAt": str(graph.value(subject, PHT.createdAt)),
+                "analysisPurpose": str(graph.value(subject, PHT.analysisPurpose)),
+                "updatedAt": str(graph.value(subject, PHT.updatedAt)),
+                "version": str(graph.value(subject, PHT.version)),
+            }
+        )
+
+    return trains[offset : offset + limit]
 
 
 # Get Train metadata by ID
@@ -52,13 +71,35 @@ async def get_train_metadata(
     train_id: Annotated[str, Path(min_length=5)],
     response_type: ResponseType = ResponseType.default,
 ):
-    return crud.get_resource_metadata(
-        graph=graph,
-        response_type=response_type,
-        subject_id=train_id,
-        namespace=TrainNS,
-        prefix="train",
-    )
+    subject = TrainNS[train_id]
+
+    # Check if Job URI exists
+    if (subject, None, None) not in graph:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Train ({train_id}) metadata not found",
+        )
+
+    if response_type is not ResponseType.default:
+        return crud.get_resource_metadata(
+            graph=graph,
+            response_type=response_type,
+            subject_id=train_id,
+            namespace=TrainNS,
+            prefix="train",
+        )
+
+    return {
+        "identifier": str(graph.value(subject, PHT.identifier)),
+        "title": str(graph.value(subject, PHT.title)),
+        "creator": str(graph.value(subject, PHT.creator)),
+        "publisher": str(graph.value(subject, PHT.publisher)),
+        "description": str(graph.value(subject, PHT.description)),
+        "analysisPurpose": str(graph.value(subject, PHT.analysisPurpose)),
+        "createdAt": str(graph.value(subject, PHT.createdAt)),
+        "updatedAt": str(graph.value(subject, PHT.updatedAt)),
+        "version": str(graph.value(subject, PHT.version)),
+    }
 
 
 # Create new Train
@@ -71,15 +112,16 @@ async def create_train_metadata(graph: GraphDep, metadata: TrainMetadataCreate):
             detail=f"Metadata already exists for Train ({metadata.identifier})",
         )
 
-    train_id = f"{metadata.identifier}-{uuid4()}"
     payload = {
         "@context": {"pht": str(PHT), "train": str(TrainNS)},
-        "@id": f"{TrainNS}{metadata.identifier}",
+        "@id": f"train:{metadata.identifier}",
         "@type": "pht:Train",
-        "pht:identifier": train_id,
+        "pht:identifier": metadata.identifier,
         "pht:title": metadata.title,
         "pht:creator": metadata.creator,
+        "pht:publisher": metadata.publisher,
         "pht:description": metadata.description,
+        "pht:analysisPurpose": metadata.analysisPurpose,
         "pht:version": metadata.version,
         "pht:createdAt": metadata.createdAt,
         "pht:updatedAt": metadata.updatedAt,
@@ -98,23 +140,25 @@ async def update_train_metadata(
     metadata: TrainMetadataUpdate,
     train_id: Annotated[str, Path(min_length=5)],
 ):
-    triple = (TrainNS[train_id], None, None)
+    subject = TrainNS[train_id]
 
     # Check if Train URI triples exists
-    if triple not in graph:
+    if (subject, None, None) not in graph:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Train ({train_id}) metadata not found",
         )
 
-    for pred, _ in graph.predicate_objects(TrainNS[train_id]):
+    for pred, _ in graph.predicate_objects(subject):
         predicate_name = pred.n3(graph.namespace_manager).split(":")[-1]
+
+        # Check request payload for new values
         new_value = metadata.model_dump().get(predicate_name)
 
         # If property does not exists in request body, skip the iteration.
         # There can be many properties such as rdf:type etc.
-        if not new_value:
+        if new_value is None:
             continue
 
         # Update triples one by one
-        graph.set((TrainNS[train_id], pred, Literal(new_value)))
+        graph.set((subject, pred, Literal(new_value)))

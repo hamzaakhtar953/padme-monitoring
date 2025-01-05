@@ -14,16 +14,13 @@ DATABASE_URL = URL.create(
     database=settings.DB_URL_DATABASE,
 )
 
-# TODO: Add 's' at the end of Train and Station Namespace
-# TODO: settings.DOMAIN should be 'monitoring.padme-analytics.de'
-# TODO: Change 'http' to 'https'
-PHT = Namespace("http://schema.padme-analytics.de/#")
-TrainNS = Namespace(f"http://{settings.DOMAIN}/train/")
-StationNS = Namespace(f"http://{settings.DOMAIN}/stations/")
-JobNS = Namespace(f"http://{settings.DOMAIN}/jobs/")
-MemoryNS = Namespace(f"http://{settings.DOMAIN}/memory/")
-CpuNS = Namespace(f"http://{settings.DOMAIN}/cpu/")
-NetworkNS = Namespace(f"http://{settings.DOMAIN}/network/")
+PHT = Namespace("https://schema.padme-analytics.de/#")
+TrainNS = Namespace(f"https://{settings.DOMAIN}/trains/")
+StationNS = Namespace(f"https://{settings.DOMAIN}/stations/")
+JobNS = Namespace(f"https://{settings.DOMAIN}/jobs/")
+MemoryNS = Namespace(f"https://{settings.DOMAIN}/memory/")
+CpuNS = Namespace(f"https://{settings.DOMAIN}/cpu/")
+NetworkNS = Namespace(f"https://{settings.DOMAIN}/network/")
 
 
 class RDFGraphSingleton:
