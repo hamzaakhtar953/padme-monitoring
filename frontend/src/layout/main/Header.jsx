@@ -21,6 +21,7 @@ import Logout from "@mui/icons-material/Logout";
 import Logo from "../../assets/logo-only.png";
 import { drawerWidth } from "../../constants";
 import { LightTooltip } from "../../components/tooltip";
+import KeycloakService from "../../service/keycloak";
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open",
@@ -48,6 +49,7 @@ const AppBar = styled(MuiAppBar, {
 export default function Header({ open, onSidebarOpen }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const isMenuOpen = Boolean(anchorEl);
+  const username = KeycloakService.getUsername();
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -74,8 +76,7 @@ export default function Header({ open, onSidebarOpen }) {
       open={isMenuOpen}
       onClose={handleProfileMenuClose}
     >
-      {/* <MenuItem onClick={() => UserService.doLogout()}> */}
-      <MenuItem>
+      <MenuItem onClick={() => KeycloakService.doLogout()}>
         <ListItemIcon>
           <Logout color="error" fontSize="small" />
         </ListItemIcon>
@@ -103,7 +104,6 @@ export default function Header({ open, onSidebarOpen }) {
         </IconButton>
         <img src={Logo} style={{ maxWidth: "60px" }} alt="PADME Monitoring" />
         <Typography variant="h6" ml={2} fontWeight="bold">
-          {/* {stationName || stationID || "Station Software"} */}
           PHT Monitoring
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
@@ -123,8 +123,7 @@ export default function Header({ open, onSidebarOpen }) {
             onClick={handleProfileMenuOpen}
             sx={{ color: "white" }}
           >
-            {/* {UserService.getUsername()} */}
-            hamzaakhtar
+            {username}
           </Button>
           {renderMenu}
         </Box>

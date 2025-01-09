@@ -1,10 +1,11 @@
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid2";
-import TrainIcon from "@mui/icons-material/Train";
-import StationIcon from "@mui/icons-material/Warehouse";
-import JobsIcon from "@mui/icons-material/WorkHistory";
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid2';
 
-import StatsCard from "../../components/dashboard/StatsCard";
+import SummaryChart from './chart/SummaryChart';
+import SummaryTable from './table/SummaryTable';
+import StationCountCard from './card/StationCountCard';
+import TrainCountCard from './card/TrainCountCard';
+import JobCountCard from './card/JobCountCard';
 
 export default function DashboardPage() {
   return (
@@ -13,71 +14,32 @@ export default function DashboardPage() {
         Dashboard
       </Typography>
       <Grid container spacing={2}>
-        {/* Stats Card x6 (in first 2 rows) */}
-        <Grid size={{ xl: 2, md: 4, xs: 6 }}>
-          <StatsCard
-            title="Trains"
-            value="25"
-            diff={12}
-            trend="up"
-            icon={<TrainIcon />}
-          />
+        {/* Summary Cards */}
+        <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
+          <TrainCountCard />
         </Grid>
-        <Grid size={{ xl: 2, md: 4, xs: 6 }}>
-          <StatsCard
-            title="Stations"
-            value="10"
-            diff={25}
-            trend="down"
-            icon={<StationIcon />}
-          />
+        <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
+          <StationCountCard />
         </Grid>
-        <Grid size={{ xl: 2, md: 4, xs: 6 }}>
-          <StatsCard
-            title="Running Jobs"
-            value="13"
-            diff={26}
-            trend="up"
-            icon={<JobsIcon />}
-          />
+        <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
+          <JobCountCard state="running" />
         </Grid>
-        <Grid size={{ xl: 2, md: 4, xs: 6 }}>
-          <StatsCard
-            title="Cancelled Jobs"
-            value="13"
-            diff={26}
-            trend="up"
-            icon={<JobsIcon />}
-          />
+        <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
+          <JobCountCard state="waiting" />
         </Grid>
-        <Grid size={{ xl: 2, md: 4, xs: 6 }}>
-          <StatsCard
-            title="Failed Jobs"
-            value="13"
-            diff={26}
-            trend="up"
-            icon={<JobsIcon />}
-          />
+        <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
+          <JobCountCard state="failed" />
         </Grid>
-        <Grid size={{ xl: 2, md: 4, xs: 6 }}>
-          <StatsCard
-            title="Pending Jobs"
-            value="13"
-            diff={26}
-            trend="up"
-            icon={<JobsIcon />}
-          />
+        <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
+          <JobCountCard state="cancelled" />
         </Grid>
-
         {/* Table */}
-        <Grid size={{ md: 8 }}>
-          <StatsCard
-            title="Recent Jobs"
-            value="13"
-            diff={26}
-            trend="up"
-            icon={<JobsIcon />}
-          />
+        <Grid size={{ md: 7, xs: 12 }}>
+          <SummaryTable />
+        </Grid>
+        {/* Chart */}
+        <Grid size={{ md: 5, xs: 12 }}>
+          <SummaryChart />
         </Grid>
       </Grid>
     </>

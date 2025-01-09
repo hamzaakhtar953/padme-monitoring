@@ -1,44 +1,28 @@
-import {
-  createTheme,
-  ThemeProvider,
-  responsiveFontSizes,
-} from "@mui/material/styles";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ThemeProvider } from '@mui/material/styles';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'react-hot-toast';
 
-import RootLayout from "./layout/main";
-import DashboardPage from "./pages/dashboard";
-import TrainsPage from "./pages/trains";
-import TrainDetailsPage from "./pages/train-detail";
-import StationsPage from "./pages/stations";
-import StationDetailsPage from "./pages/station-detail";
-import ErrorPage from "./pages/Error";
-// import { ColorModeContext, useMode } from "./theme";
-import theme from "./theme";
+import AppLayout from './layout/main';
+import theme from './theme';
+import AppRoutes from './routes';
+
+const queryClient = new QueryClient();
 
 function App() {
-  // const [theme, colorMode] = useMode();
-
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <RootLayout />,
-      errorElement: <ErrorPage />,
-      children: [
-        { index: true, element: <DashboardPage /> },
-        { path: "trains", element: <TrainsPage /> },
-        { path: "trains/:trainId", element: <TrainDetailsPage /> },
-        { path: "stations", element: <StationsPage /> },
-        { path: "stations/:stationId", element: <StationDetailsPage /> },
-      ],
-    },
-  ]);
-
   return (
-    // <ColorModeContext.Provider value={colorMode}>
     <ThemeProvider theme={theme}>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AppLayout>
+            <AppRoutes />
+          </AppLayout>
+        </BrowserRouter>
+        <Toaster />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     </ThemeProvider>
-    // </ColorModeContext.Provider>
   );
 }
 

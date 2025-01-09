@@ -1,5 +1,5 @@
 // import { createContext, useState, useMemo } from "react";
-import { createTheme } from "@mui/material/styles";
+import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 
 // color design tokens export
 // export const tokens = (mode) => ({
@@ -225,6 +225,7 @@ let theme = createTheme({
     },
   },
   typography: {
+    fontWeightRegular: 500,
     fontFamily: [
       "Manrope",
       "-apple-system",

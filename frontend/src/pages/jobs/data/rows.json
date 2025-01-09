@@ -1,0 +1,173 @@
+[
+    {
+      "id": "44bc00a0-9208-11ef-a539-579e5c650fb5",
+      "state": "running",
+      "train": "metrics_csv",
+      "currentStation": "Klee",
+      "creator": "Hamza Akhtar",
+      "description": "Executing train on two stations e.g. Klee and Bruegel for statistical analysis",
+      "created": "2024-11-25T12:09:07.121622",
+      "updated": "2024-11-25T12:09:07.121635"
+    },
+    {
+      "id": "43vc00a0-9208-11ef-a539-579e5c650fb5",
+      "state": "failed",
+      "train": "hello_world",
+      "currentStation": "Bruegel",
+      "creator": "John Doe",
+      "description": "Executing hello-world on two stations e.g. Klee and Bruegel for statistical analysis",
+      "created": "2024-11-25T12:09:07.121622",
+      "updated": "2024-11-25T12:09:07.121635"
+    },
+    {
+      "id": "55cd11b1-9309-22fg-b650-680f6d7610c6",
+      "state": "pending",
+      "train": "data_cleaning",
+      "currentStation": "Station Alpha",
+      "creator": "Alice Johnson",
+      "description": "Cleaning data for initial analysis",
+      "created": "2024-11-26T13:10:08.121622",
+      "updated": "2024-11-26T13:10:08.121635"
+    },
+    {
+      "id": "66de22c2-940a-33gh-c761-79107e8721d7",
+      "state": "cancelled",
+      "train": "model_training",
+      "currentStation": "Station Beta",
+      "creator": "Bob Smith",
+      "description": "Training model on dataset",
+      "created": "2024-11-27T14:11:09.121622",
+      "updated": "2024-11-27T14:11:09.121635"
+    },
+    {
+      "id": "77ef33d3-950b-44ij-d872-8a218f9832e8",
+      "state": "failed",
+      "train": "data_visualization",
+      "currentStation": "Station Gamma",
+      "creator": "Charlie Brown",
+      "description": "Visualizing data trends",
+      "created": "2024-11-28T15:12:10.121622",
+      "updated": "2024-11-28T15:12:10.121635"
+    },
+    {
+      "id": "88fg44e4-960c-55jk-e983-9b3290a943f9",
+      "state": "running",
+      "train": "data_collection",
+      "currentStation": "Station Delta",
+      "creator": "David Wilson",
+      "description": "Collecting data from sources",
+      "created": "2024-11-29T16:13:11.121622",
+      "updated": "2024-11-29T16:13:11.121635"
+    },
+    {
+      "id": "99gh55f5-970d-66kl-f094-ac43a1b0540a",
+      "state": "pending",
+      "train": "data_preprocessing",
+      "currentStation": "Station Epsilon",
+      "creator": "Eve Davis",
+      "description": "Preprocessing data for analysis",
+      "created": "2024-11-30T17:14:12.121622",
+      "updated": "2024-11-30T17:14:12.121635"
+    },
+    {
+      "id": "00hi66g6-980e-77mn-g105-bd54b2c1651b",
+      "state": "cancelled",
+      "train": "feature_engineering",
+      "currentStation": "Station Zeta",
+      "creator": "Frank Moore",
+      "description": "Engineering features for model",
+      "created": "2024-12-01T18:15:13.121622",
+      "updated": "2024-12-01T18:15:13.121635"
+    },
+    {
+      "id": "11ij77h7-990f-88op-h216-ce65c3d2762c",
+      "state": "failed",
+      "train": "model_evaluation",
+      "currentStation": "Station Eta",
+      "creator": "Grace Lee",
+      "description": "Evaluating model performance",
+      "created": "2024-12-02T19:16:14.121622",
+      "updated": "2024-12-02T19:16:14.121635"
+    },
+    {
+      "id": "22jk88i8-0a0g-99qr-i327-df76d4e3873d",
+      "state": "running",
+      "train": "hyperparameter_tuning",
+      "currentStation": "Station Theta",
+      "creator": "Hank Green",
+      "description": "Tuning hyperparameters for model",
+      "created": "2024-12-03T20:17:15.121622",
+      "updated": "2024-12-03T20:17:15.121635"
+    },
+    {
+      "id": "33kl99j9-1b1h-00st-j438-eg87e5f4984e",
+      "state": "pending",
+      "train": "model_deployment",
+      "currentStation": "Station Iota",
+      "creator": "Ivy White",
+      "description": "Deploying model to production",
+      "created": "2024-12-04T21:18:16.121622",
+      "updated": "2024-12-04T21:18:16.121635"
+    },
+    {
+      "id": "44lm00k0-2c2i-11uv-k549-fg98f6g5a95f",
+      "state": "cancelled",
+      "train": "data_monitoring",
+      "currentStation": "Station Kappa",
+      "creator": "Jack Black",
+      "description": "Monitoring data pipeline",
+      "created": "2024-12-05T22:19:17.121622",
+      "updated": "2024-12-05T22:19:17.121635"
+    },
+    {
+      "id": "55mn11l1-3d3j-22wx-l650-gh09g7h6ba60",
+      "state": "failed",
+      "train": "data_integration",
+      "currentStation": "Station Lambda",
+      "creator": "Karen Brown",
+      "description": "Integrating data from sources",
+      "created": "2024-12-06T23:20:18.121622",
+      "updated": "2024-12-06T23:20:18.121635"
+    },
+    {
+      "id": "66op22m2-4e4k-33yz-m761-hi10h8i7cb71",
+      "state": "running",
+      "train": "data_validation",
+      "currentStation": "Station Mu",
+      "creator": "Leo King",
+      "description": "Validating data quality",
+      "created": "2024-12-07T00:21:19.121622",
+      "updated": "2024-12-07T00:21:19.121635"
+    },
+    {
+      "id": "77pq33n3-5f5l-44ab-n872-ij21i9j8dc82",
+      "state": "pending",
+      "train": "data_enrichment",
+      "currentStation": "Station Nu",
+      "creator": "Mia Scott",
+      "description": "Enriching data with external sources",
+      "created": "2024-12-08T01:22:20.121622",
+      "updated": "2024-12-08T01:22:20.121635"
+    },
+    {
+      "id": "88qr44o4-6g6m-55cd-o983-jk32j0k9ed93",
+      "state": "cancelled",
+      "train": "data_aggregation",
+      "currentStation": "Station Xi",
+      "creator": "Noah Clark",
+      "description": "Aggregating data for analysis",
+      "created": "2024-12-09T02:23:21.121622",
+      "updated": "2024-12-09T02:23:21.121635"
+    },
+    {
+      "id": "99rs55p5-7h7n-66ef-p094-kl43k1l0fe04",
+      "state": "failed",
+      "train": "data_transformation",
+      "currentStation": "Station Omicron",
+      "creator": "Olivia Martinez",
+      "description": "Transforming data for analysis",
+      "created": "2024-12-10T03:24:22.121622",
+      "updated": "2024-12-10T03:24:22.121635"
+    }
+  ]
+  

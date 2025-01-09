@@ -1,65 +1,50 @@
-import * as React from "react";
-import { Link, useLocation, NavLink } from "react-router-dom";
-import { styled, useTheme } from "@mui/material/styles";
-import MuiDrawer from "@mui/material/Drawer";
-import List from "@mui/material/List";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
+import { Link, useLocation } from 'react-router-dom';
+import { styled, useTheme } from '@mui/material/styles';
+import MuiDrawer from '@mui/material/Drawer';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import DashboardIcon from '@mui/icons-material/SpaceDashboard';
+import TrainIcon from '@mui/icons-material/Train';
+import StationIcon from '@mui/icons-material/Warehouse';
+import JobsIcon from '@mui/icons-material/WorkHistory';
 
-import { drawerWidth, navLinks } from "../../constants";
-import SidebarHeader from "./SidebarHeader";
+import { drawerWidth } from '../../constants';
+import SidebarHeader from './SidebarHeader';
 
-const openedMixin = (theme) => ({
-  width: drawerWidth,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: "hidden",
-});
-
-const closedMixin = (theme) => ({
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  overflowX: "hidden",
-  width: `calc(${theme.spacing(7)} + 1px)`,
-  [theme.breakpoints.up("sm")]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
+const navLinks = [
+  {
+    title: 'Dashboard',
+    index: 0,
+    to: '/dashboard',
+    exact: true,
+    icon: <DashboardIcon />,
   },
-});
-
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme }) => ({
-  width: drawerWidth,
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  variants: [
-    {
-      props: ({ open }) => open,
-      style: {
-        ...openedMixin(theme),
-        "& .MuiDrawer-paper": openedMixin(theme),
-      },
-    },
-    {
-      props: ({ open }) => !open,
-      style: {
-        ...closedMixin(theme),
-        "& .MuiDrawer-paper": closedMixin(theme),
-      },
-    },
-  ],
-}));
+  {
+    title: 'Trains',
+    index: 1,
+    to: '/trains',
+    icon: <TrainIcon />,
+  },
+  {
+    title: 'Stations',
+    index: 2,
+    to: '/stations',
+    icon: <StationIcon />,
+  },
+  {
+    title: 'Jobs',
+    index: 3,
+    to: '/jobs',
+    icon: <JobsIcon />,
+  },
+];
 
 export default function Sidebar({ open, onSidebarClose }) {
   const theme = useTheme();
@@ -69,7 +54,7 @@ export default function Sidebar({ open, onSidebarClose }) {
     <Drawer variant="permanent" open={open}>
       <SidebarHeader>
         <IconButton onClick={onSidebarClose}>
-          {theme.direction === "rtl" ? (
+          {theme.direction === 'rtl' ? (
             <ChevronRightIcon />
           ) : (
             <ChevronLeftIcon />
@@ -79,26 +64,26 @@ export default function Sidebar({ open, onSidebarClose }) {
       <Divider />
       <List
         sx={{
-          paddingTop: "19px",
-          a: { textDecoration: "none", color: "inherit" },
+          paddingTop: '19px',
+          a: { textDecoration: 'none', color: 'inherit' },
         }}
       >
-        {navLinks("").map(({ title, to, icon, exact }) => (
+        {navLinks.map(({ title, to, icon, exact }) => (
           <Link key={title} to={to}>
-            <ListItem disablePadding sx={{ display: "block" }}>
+            <ListItem disablePadding sx={{ display: 'block' }}>
               <ListItemButton
                 selected={exact ? pathname === to : pathname.includes(to)}
                 sx={{
                   minHeight: 48,
-                  justifyContent: open ? "initial" : "center",
+                  justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 0,
-                    mr: open ? 3 : "auto",
-                    justifyContent: "center",
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
                   }}
                 >
                   {icon}
@@ -112,3 +97,49 @@ export default function Sidebar({ open, onSidebarClose }) {
     </Drawer>
   );
 }
+
+const openedMixin = (theme) => ({
+  width: drawerWidth,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: 'hidden',
+});
+
+const closedMixin = (theme) => ({
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  overflowX: 'hidden',
+  width: `calc(${theme.spacing(7)} + 1px)`,
+  [theme.breakpoints.up('sm')]: {
+    width: `calc(${theme.spacing(8)} + 1px)`,
+  },
+});
+
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  boxSizing: 'border-box',
+  variants: [
+    {
+      props: ({ open }) => open,
+      style: {
+        ...openedMixin(theme),
+        '& .MuiDrawer-paper': openedMixin(theme),
+      },
+    },
+    {
+      props: ({ open }) => !open,
+      style: {
+        ...closedMixin(theme),
+        '& .MuiDrawer-paper': closedMixin(theme),
+      },
+    },
+  ],
+}));

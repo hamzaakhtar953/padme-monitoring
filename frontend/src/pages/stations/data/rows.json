@@ -1,0 +1,135 @@
+[
+  {
+    "id": "ef415979-dd4b-4aef-b1c1-2c5f39f7e3cf",
+    "name": "BIK-Workstation-MJ",
+    "owner": "Mehrshad Jaberansary",
+    "description": "FAIRDS enabled station for testing PADME-EDC functionality",
+    "latitude": "150.1512315131",
+    "longitude": "60.31243124123",
+    "created": "2024-11-25T12:09:07.121622",
+    "updated": "2024-11-25T12:09:07.121635",
+    "executionEnvironment": {
+      "hasGPUSupport": false,
+      "totalGPUPower": null,
+      "totalCPUCores": "16",
+      "totalRAM": "64 GB",
+      "totalDiskSpace": "1 TB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "1 Gbps"
+    }
+  },
+  {
+    "id": "b9e93eae-12d7-4f9a-a180-43b7eca17181",
+    "name": "Fraunhofer FIT",
+    "owner": "Zeyd Bukhers",
+    "description": "PADME-PHT station in the FIT Infrastructure",
+    "latitude": "110.1512315131",
+    "longitude": "40.31243124123",
+    "created": "2024-11-25T12:09:07.121622",
+    "updated": "2024-11-25T12:09:07.121635",
+    "executionEnvironment": {
+      "hasGPUSupport": true,
+      "totalGPUPower": "16 GB",
+      "totalCPUCores": "16",
+      "totalRAM": "64 GB",
+      "totalDiskSpace": "1 TB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "1 Gbps"
+    }
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6",
+    "name": "Station Alpha",
+    "owner": "Sascha Welten",
+    "description": "Research station for AI development",
+    "latitude": "120.1234567890",
+    "longitude": "50.9876543210",
+    "created": "2024-11-26T10:15:30.123456",
+    "updated": "2024-11-26T10:15:30.123456",
+    "executionEnvironment": {
+      "hasGPUSupport": true,
+      "totalGPUPower": "32 GB",
+      "totalCPUCores": "32",
+      "totalRAM": "128 GB",
+      "totalDiskSpace": "2 TB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "10 Gbps"
+    }
+  },
+  {
+    "id": "b2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+    "name": "Station Beta",
+    "owner": "Bob Smith",
+    "description": "Data processing station",
+    "latitude": "130.1234567890",
+    "longitude": "60.9876543210",
+    "created": "2024-11-27T11:20:40.123456",
+    "updated": "2024-11-27T11:20:40.123456",
+    "executionEnvironment": {
+      "hasGPUSupport": false,
+      "totalGPUPower": null,
+      "totalCPUCores": "8",
+      "totalRAM": "32 GB",
+      "totalDiskSpace": "500 GB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "1 Gbps"
+    }
+  },
+  {
+    "id": "c3d4e5f6-g7h8-i9j0-k1l2-m3n4o5p6q7r8",
+    "name": "Station Gamma",
+    "owner": "Charlie Davis",
+    "description": "High-performance computing station",
+    "latitude": "140.1234567890",
+    "longitude": "70.9876543210",
+    "created": "2024-11-28T12:25:50.123456",
+    "updated": "2024-11-28T12:25:50.123456",
+    "executionEnvironment": {
+      "hasGPUSupport": true,
+      "totalGPUPower": "64 GB",
+      "totalCPUCores": "64",
+      "totalRAM": "256 GB",
+      "totalDiskSpace": "4 TB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "40 Gbps"
+    }
+  },
+  {
+    "id": "d4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
+    "name": "Station Delta",
+    "owner": "Diana Evans",
+    "description": "Machine learning research station",
+    "latitude": "150.1234567890",
+    "longitude": "80.9876543210",
+    "created": "2024-11-29T13:30:00.123456",
+    "updated": "2024-11-29T13:30:00.123456",
+    "executionEnvironment": {
+      "hasGPUSupport": true,
+      "totalGPUPower": "128 GB",
+      "totalCPUCores": "128",
+      "totalRAM": "512 GB",
+      "totalDiskSpace": "8 TB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "100 Gbps"
+    }
+  },
+  {
+    "id": "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
+    "name": "Station Epsilon",
+    "owner": "Eve Foster",
+    "description": "Quantum computing research station",
+    "latitude": "160.1234567890",
+    "longitude": "90.9876543210",
+    "created": "2024-11-30T14:35:10.123456",
+    "updated": "2024-11-30T14:35:10.123456",
+    "executionEnvironment": {
+      "hasGPUSupport": true,
+      "totalGPUPower": "256 GB",
+      "totalCPUCores": "256",
+      "totalRAM": "1 TB",
+      "totalDiskSpace": "16 TB",
+      "hasInternetConnectivity": true,
+      "networkBandwidth": "200 Gbps"
+    }
+  }
+]

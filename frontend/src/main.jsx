@@ -1,10 +1,28 @@
-import "./styles/global.css";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
+import './styles/index.css';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { StyledEngineProvider } from '@mui/material';
 
-createRoot(document.getElementById("root")).render(
+import App from './App.jsx';
+import KeycloakService from './service/keycloak.js';
+import { configureAxios } from './service/axios.js';
+
+createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <StyledEngineProvider injectFirst>
+      <App />
+    </StyledEngineProvider>
   </StrictMode>
 );
+
+// const renderApp = () =>
+//   createRoot(document.getElementById('root')).render(
+//     <StrictMode>
+//       <StyledEngineProvider injectFirst>
+//         <App />
+//       </StyledEngineProvider>
+//     </StrictMode>
+//   );
+
+// KeycloakService.initialize(renderApp);
+// configureAxios();
