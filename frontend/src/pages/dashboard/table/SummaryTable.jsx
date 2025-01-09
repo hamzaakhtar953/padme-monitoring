@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
@@ -7,93 +9,15 @@ import Chip from '@mui/material/Chip';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import RefreshIcon from '@mui/icons-material/Cached';
-import PendingIcon from '@mui/icons-material/PauseCircleOutline';
-import FailedIcon from '@mui/icons-material/ErrorOutline';
-import FinishedIcon from '@mui/icons-material/Check';
-import CancelledIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UpdateIcon from '@mui/icons-material/Update';
 
+import { chipColor } from '../../../components/chip';
+import { getJobs } from '../../../api/job';
 import { LightTooltip } from '../../../components/tooltip';
-import { getJobs } from '../../../api/jobs';
-
-const chipColor = {
-  waiting: { color: 'warning', icon: <PendingIcon /> },
-  running: { color: 'info', icon: <RefreshIcon /> },
-  finished: { color: 'success', icon: <FinishedIcon /> },
-  failed: { color: 'error', icon: <FailedIcon /> },
-  cancelled: { color: 'primary', icon: <CancelledIcon /> },
-};
-
-const columns = [
-  {
-    field: 'identifier',
-    headerName: 'Job ID',
-    width: 155,
-    editable: true,
-    resizable: false,
-  },
-  {
-    field: 'state',
-    headerName: 'State',
-    width: 120,
-    resizable: false,
-    cellClassName: 'job-summary-state',
-    renderCell: (params) => {
-      const label = params.value;
-      return (
-        <Chip
-          className="font-semibold"
-          variant="outlined"
-          size="small"
-          sx={{ width: 120 }}
-          label={label}
-          icon={chipColor[label].icon}
-          color={chipColor[label].color}
-        />
-      );
-    },
-  },
-  {
-    field: 'trainId',
-    headerName: 'Train Name',
-    width: 130,
-    valueGetter: (value) => value.split('/').pop(),
-  },
-  {
-    field: 'currentStation',
-    headerName: 'Curr. Station',
-    description: 'The current station where the train is executing.',
-    width: 120,
-    resizable: false,
-    valueGetter: (value) => value.name,
-  },
-  { field: 'creator', headerName: 'Creator', width: 120, resizable: false },
-  {
-    field: 'actions',
-    type: 'actions',
-    resizable: false,
-    getActions: (params) => [
-      /* eslint-disable react/jsx-key */
-      <GridActionsCellItem
-        label="View job details"
-        icon={
-          <LightTooltip
-            disableInteractive
-            placement="left"
-            title="View details"
-          >
-            <OpenInNewIcon />
-          </LightTooltip>
-        }
-        onClick={() => console.log(params)}
-      />,
-    ],
-  },
-];
 
 function SummaryTable() {
+  const navigate = useNavigate();
   const {
     data: jobs,
     isLoading,
@@ -108,6 +32,76 @@ function SummaryTable() {
   const timeAgo = lastUpdated
     ? formatDistanceToNow(parseISO(lastUpdated), { addSuffix: true })
     : 'N/A';
+
+  const columns = useMemo(
+    () => [
+      {
+        field: 'identifier',
+        headerName: 'Job ID',
+        width: 155,
+        editable: true,
+        resizable: false,
+      },
+      {
+        field: 'state',
+        headerName: 'State',
+        width: 120,
+        resizable: false,
+        cellClassName: 'job-summary-state',
+        renderCell: (params) => {
+          const label = params.value;
+          return (
+            <Chip
+              className="font-semibold"
+              variant="outlined"
+              size="small"
+              sx={{ width: 120 }}
+              label={label}
+              icon={chipColor[label].icon}
+              color={chipColor[label].color}
+            />
+          );
+        },
+      },
+      {
+        field: 'trainId',
+        headerName: 'Train Name',
+        width: 130,
+        valueGetter: (value) => value.split('/').pop(),
+      },
+      {
+        field: 'currentStation',
+        headerName: 'Curr. Station',
+        description: 'The current station where the train is executing.',
+        width: 120,
+        resizable: false,
+        valueGetter: (value) => value.name,
+      },
+      { field: 'creator', headerName: 'Creator', width: 120, resizable: false },
+      {
+        field: 'actions',
+        type: 'actions',
+        resizable: false,
+        getActions: (params) => [
+          /* eslint-disable react/jsx-key */
+          <GridActionsCellItem
+            label="View job details"
+            icon={
+              <LightTooltip
+                disableInteractive
+                placement="left"
+                title="View details"
+              >
+                <OpenInNewIcon />
+              </LightTooltip>
+            }
+            onClick={() => navigate(`/jobs/${params.id}`)}
+          />,
+        ],
+      },
+    ],
+    [navigate]
+  );
 
   if (isError) {
     toast.error(error.message);

@@ -3,9 +3,7 @@ import Grid from '@mui/material/Grid2';
 
 import SummaryChart from './chart/SummaryChart';
 import SummaryTable from './table/SummaryTable';
-import StationCountCard from './card/StationCountCard';
-import TrainCountCard from './card/TrainCountCard';
-import JobCountCard from './card/JobCountCard';
+import { JobSummaryCard, StationSummaryCard, TrainSummaryCard } from './card';
 
 export default function DashboardPage() {
   return (
@@ -16,22 +14,22 @@ export default function DashboardPage() {
       <Grid container spacing={2}>
         {/* Summary Cards */}
         <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
-          <TrainCountCard />
+          <TrainSummaryCard />
         </Grid>
         <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
-          <StationCountCard />
+          <StationSummaryCard />
         </Grid>
         <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
-          <JobCountCard state="running" />
+          <JobSummaryCard state="running" />
         </Grid>
         <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
-          <JobCountCard state="waiting" />
+          <JobSummaryCard state="waiting" />
         </Grid>
         <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
-          <JobCountCard state="failed" />
+          <JobSummaryCard state="failed" />
         </Grid>
         <Grid size={{ xl: 2, md: 4, sm: 6, xs: 12 }}>
-          <JobCountCard state="cancelled" />
+          <JobSummaryCard state="cancelled" />
         </Grid>
         {/* Table */}
         <Grid size={{ md: 7, xs: 12 }}>

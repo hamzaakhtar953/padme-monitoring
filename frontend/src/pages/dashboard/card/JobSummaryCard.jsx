@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getJobCountByState } from '../../../api/dashboard';
 import SummaryCard from './SummaryCard';
+import { getJobCountByState } from '../../../api/dashboard';
 
 const jobStateProps = {
   running: { type: 'runningJob', title: 'Running Jobs' },
@@ -10,7 +10,7 @@ const jobStateProps = {
   cancelled: { type: 'cancelledJob', title: 'Cancelled Jobs' },
 };
 
-function JobCountCard({ state }) {
+function JobSummaryCard({ state }) {
   const { data: count } = useQuery({
     queryKey: ['jobs', { count: true, state }],
     queryFn: ({ signal }) => getJobCountByState({ signal, state }),
@@ -25,4 +25,4 @@ function JobCountCard({ state }) {
   );
 }
 
-export default JobCountCard;
+export default JobSummaryCard;
