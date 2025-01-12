@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataGrid, GridToolbar, GridActionsCellItem } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
@@ -26,7 +26,7 @@ function StationTable() {
     toast.error(error.message);
   }
 
-  const columns = useMemo(
+  const columns = React.useMemo(
     () => [
       {
         field: 'lineNo',
@@ -43,10 +43,11 @@ function StationTable() {
         headerName: 'Station ID',
         width: 200,
         editable: true,
+        renderCell: (params) => <code>{params.value}</code>,
       },
-      { field: 'title', headerName: 'Name', width: 150 },
-      { field: 'stationOwner', headerName: 'Owner', width: 150 },
-      { field: 'responsibleForStation', headerName: 'Admin', width: 150 },
+      { field: 'title', headerName: 'Name' },
+      { field: 'stationOwner', headerName: 'Owner', width: 130 },
+      { field: 'responsibleForStation', headerName: 'Admin', width: 130 },
       { field: 'description', headerName: 'Description', width: 300 },
       { field: 'longitude', headerName: 'Longitude', width: 120 },
       { field: 'latitude', headerName: 'Latitute', width: 120 },

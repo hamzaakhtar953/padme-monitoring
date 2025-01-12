@@ -1,18 +1,17 @@
 import * as React from 'react';
 import { DataGrid, GridActionsCellItem, GridToolbar } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import EmptyRowsOverlay from '../../layout/table/EmptyRowsOverlay';
 import { LightTooltip } from '../../components/tooltip';
 import { formatDate, renderRowIds } from '../../utils/helper';
-import { useQuery } from '@tanstack/react-query';
 import { getTrains } from '../../api/train';
 
 function TrainTable() {
   const navigate = useNavigate();
-
   const {
     data: trains,
     isLoading,
@@ -40,6 +39,7 @@ function TrainTable() {
         headerName: 'Train ID',
         width: 180,
         editable: true,
+        renderCell: (params) => <code>{params.value}</code>,
       },
       { field: 'title', headerName: 'Title', width: 190, editable: true },
       { field: 'creator', headerName: 'Creator', width: 130 },
@@ -56,7 +56,12 @@ function TrainTable() {
         width: 150,
         valueGetter: formatDate,
       },
-      { field: 'version', headerName: 'Version', width: 80 },
+      {
+        field: 'version',
+        headerName: 'Version',
+        width: 80,
+        renderCell: (params) => <code>{params.value}</code>,
+      },
       {
         field: 'actions',
         type: 'actions',
@@ -90,14 +95,14 @@ function TrainTable() {
       rows={trains}
       columns={columns}
       loading={isLoading}
-      pageSizeOptions={[20]}
       getRowId={(row) => row.identifier}
+      pageSizeOptions={[10, 15, 25, { value: -1, label: 'All' }]}
       disableRowSelectionOnClick
       initialState={{
         density: 'comfortable',
         pagination: {
           paginationModel: {
-            pageSize: 20,
+            pageSize: 10,
           },
         },
       }}

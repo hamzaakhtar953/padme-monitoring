@@ -1,4 +1,6 @@
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid2';
@@ -7,32 +9,28 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
-import { formatDate } from '../../utils/helper';
 
-const station = {
-  id: 'b9e93eae-12d7-4f9a-a180-43b7eca17181',
-  name: 'Fraunhofer FIT',
-  owner: 'Zeyd Bukhers',
-  description: 'PADME-PHT station in the FIT Infrastructure',
-  latitude: '50.775345',
-  longitude: '6.083887',
-  created: '2024-11-25T12:09:07.121622',
-  updated: '2024-11-25T12:09:07.121635',
-  executionEnvironment: {
-    hasGPUSupport: true,
-    totalGPUPower: '16 GiB',
-    totalCPUCores: '16',
-    totalRAM: '64 GiB',
-    totalDiskSpace: '1 TB',
-    hasInternetConnectivity: true,
-    networkBandwidth: '1 Gbps',
-  },
-};
+import { formatDate } from '../../utils/helper';
+import { getStationDetails } from '../../api/station';
 
 export default function StationDetailPage() {
-  const params = useParams();
+  const { stationId } = useParams();
 
-  const hasGPUSupport = station.executionEnvironment.hasGPUSupport;
+  const {
+    data: stationDetails,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['stations', { id: stationId }],
+    queryFn: ({ signal }) => getStationDetails({ signal, stationId }),
+  });
+
+  // Derived state
+  const hasGPUSupport = stationDetails?.hasGPUSupport;
+  const hasInternetSupport = stationDetails?.hasInternetConnectivity;
+
+  if (isError) toast.error(error.message);
 
   return (
     <>
@@ -40,29 +38,52 @@ export default function StationDetailPage() {
         direction={{ sm: 'column', md: 'row' }}
         alignItems={{ md: 'center', sm: '-moz-initial' }}
         justifyContent="space-between"
-        spacing={2}
+        gap={2}
+        // spacing={2}
       >
         <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" gap={3}>
+          <Stack
+            direction={{ sm: 'column', md: 'row' }}
+            alignItems="center"
+            gap={3}
+          >
             <Typography variant="h4" fontWeight="bold">
-              {station.name}
+              {stationDetails?.title}
             </Typography>
-            <Chip
-              className="text-sm font-bold"
-              label={hasGPUSupport ? 'GPU supported' : 'GPU not supported'}
-              sx={{ paddingX: 0.5 }}
-              icon={hasGPUSupport ? <CheckIcon /> : <ClearIcon />}
-              color={hasGPUSupport ? 'success' : 'warning'}
-            />
+            <Stack direction="row" spacing={2}>
+              <Chip
+                className="text-sm font-bold"
+                label={hasGPUSupport ? 'GPU supported' : 'GPU not supported'}
+                sx={{ paddingX: 0.5 }}
+                icon={hasGPUSupport ? <CheckIcon /> : <ClearIcon />}
+                color={hasGPUSupport ? 'success' : 'warning'}
+              />
+              <Chip
+                className="text-sm font-bold"
+                label={
+                  hasInternetSupport ? 'Internet Connectivity' : 'No Internet'
+                }
+                sx={{ paddingX: 0.5 }}
+                icon={hasInternetSupport ? <CheckIcon /> : <ClearIcon />}
+                color={hasInternetSupport ? 'success' : 'warning'}
+              />
+            </Stack>
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ justifyContent: { xs: 'center', md: 'unset' } }}
+          >
             <Typography
               className="rounded-md border-2 border-stone-600 px-1 font-semibold uppercase tracking-wide"
               variant="body2"
             >
               Owner
             </Typography>
-            <Typography className="font-semibold">{station.owner}</Typography>
+            <Typography className="font-semibold">
+              {stationDetails?.stationOwner}
+            </Typography>
           </Stack>
         </Stack>
         <Stack direction="row" spacing={2}>
@@ -73,7 +94,7 @@ export default function StationDetailPage() {
                 CPU Cores
               </Typography>
               <Typography variant="h4" className="font-semibold">
-                {station.executionEnvironment.totalCPUCores}
+                {stationDetails?.totalCPUCores}
               </Typography>
             </Stack>
           </Paper>
@@ -84,21 +105,23 @@ export default function StationDetailPage() {
                 Memory
               </Typography>
               <Typography variant="h4" className="font-semibold">
-                {station.executionEnvironment.totalRAM}
+                {stationDetails?.totalRAM}
               </Typography>
             </Stack>
           </Paper>
           {/* NETWORK */}
-          <Paper className="rounded-xl px-5 py-4" elevation={0}>
-            <Stack alignItems="center" spacing={0.5}>
-              <Typography className="text-sm font-bold uppercase text-gray-500">
-                Network Bandwidth
-              </Typography>
-              <Typography variant="h4" className="font-semibold">
-                {station.executionEnvironment.networkBandwidth}
-              </Typography>
-            </Stack>
-          </Paper>
+          {hasInternetSupport && (
+            <Paper className="rounded-xl px-5 py-4" elevation={0}>
+              <Stack alignItems="center" spacing={0.5}>
+                <Typography className="text-sm font-bold uppercase text-gray-500">
+                  Network Bandwidth
+                </Typography>
+                <Typography variant="h4" className="font-semibold">
+                  {stationDetails?.networkBandwidth}
+                </Typography>
+              </Stack>
+            </Paper>
+          )}
           {/* DISK */}
           <Paper className="rounded-xl px-5 py-4" elevation={0}>
             <Stack alignItems="center" spacing={0.5}>
@@ -106,7 +129,7 @@ export default function StationDetailPage() {
                 Disk Space
               </Typography>
               <Typography variant="h4" className="font-semibold">
-                {station.executionEnvironment.totalDiskSpace}
+                {stationDetails?.totalDiskSpace}
               </Typography>
             </Stack>
           </Paper>
@@ -118,7 +141,7 @@ export default function StationDetailPage() {
                   GPU Memory
                 </Typography>
                 <Typography variant="h4" className="font-semibold">
-                  {station.executionEnvironment.totalGPUPower}
+                  {stationDetails?.totalGPUPower}
                 </Typography>
               </Stack>
             </Paper>
@@ -138,7 +161,7 @@ export default function StationDetailPage() {
               <Typography className="font-bold text-stone-600">
                 Description
               </Typography>
-              <Typography>{station.description}</Typography>
+              <Typography>{stationDetails?.description}</Typography>
             </Stack>
           </Paper>
         </Grid>
@@ -155,30 +178,39 @@ export default function StationDetailPage() {
                 <Typography className="font-bold text-stone-600">
                   Station ID:
                 </Typography>
-                <Typography>{station.id}</Typography>
+                <code>{stationId}</code>
               </Stack>
-              {/* TODO: Meta URI */}
+              {/* Metadata URI */}
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="font-bold text-stone-600">
                   Metadata URI:
                 </Typography>
-                <Typography>
-                  https://monitoring.padme-analytics.de/stations/Klee
+                <code>{stationDetails?.metadataUri}</code>
+              </Stack>
+              {/* Responsible for stations */}
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Typography className="font-bold text-stone-600">
+                  Station admin:
                 </Typography>
+                <code>{stationDetails?.responsibleForStation}</code>
               </Stack>
               {/* Created at */}
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="font-bold text-stone-600">
                   Created at:
                 </Typography>
-                <Typography>{formatDate(station.created)}</Typography>
+                <code>
+                  {stationDetails && formatDate(stationDetails?.createdAt)}
+                </code>
               </Stack>
               {/* Updated at */}
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="font-bold text-stone-600">
                   Updated at:
                 </Typography>
-                <Typography>{formatDate(station.updated)}</Typography>
+                <code>
+                  {stationDetails && formatDate(stationDetails?.updatedAt)}
+                </code>
               </Stack>
               {/* Model */}
               <Stack>
@@ -186,13 +218,13 @@ export default function StationDetailPage() {
                   <Typography className="w-24 font-bold text-stone-600">
                     Latitude:
                   </Typography>
-                  <Typography>{station.latitude}</Typography>
+                  <code>{stationDetails?.latitude}</code>
                 </Stack>
                 <Stack direction="row" alignItems="center">
                   <Typography className="w-24 font-bold text-stone-600">
                     Longitude:
                   </Typography>
-                  <Typography>{station.longitude}</Typography>
+                  <code>{stationDetails?.longitude}</code>
                 </Stack>
               </Stack>
             </Stack>

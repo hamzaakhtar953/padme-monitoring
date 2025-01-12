@@ -1,6 +1,18 @@
+import { format, parseISO } from 'date-fns';
+
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleString('de-DE');
+  const date = parseISO(dateStr);
+  return format(date, 'MMM d, yyyy h:mm a');
 }
+
+const getGaugeColor = (value) => {
+  // Green for normal range
+  if (value < 80) return '#52b202';
+  // Orange for warning range
+  if (value < 90) return '#FFA500';
+  // Red for critical range
+  return '#ef4444';
+};
 
 function renderRowIds(params) {
   return params.api.getAllRowIds().indexOf(params.id) + 1;
@@ -21,4 +33,4 @@ function throwErrorBasedOnResponse(error) {
   }
 }
 
-export { formatDate, renderRowIds, throwErrorBasedOnResponse };
+export { formatDate, getGaugeColor, renderRowIds, throwErrorBasedOnResponse };
