@@ -12,6 +12,10 @@ import { LightTooltip } from '../../components/tooltip';
 import { chipColor } from '../../components/chip';
 import { formatDate, renderRowIds } from '../../utils/helper';
 
+function renderCodeFmt(params) {
+  return <code>{params.value}</code>;
+}
+
 function JobTable() {
   const navigate = useNavigate();
   const [density, setDensity] = useState('comfortable');
@@ -48,12 +52,13 @@ function JobTable() {
         editable: true,
         resizable: false,
         width: 200,
+        renderCell: renderCodeFmt,
       },
       {
         field: 'state',
         headerName: 'State',
         resizable: false,
-        width: 150,
+        width: 130,
         renderCell: (params) => {
           const label = params.value;
           const chipSize = density !== 'comfortable' ? 'small' : 'medium';
@@ -76,14 +81,16 @@ function JobTable() {
         headerName: 'Train Name',
         width: 150,
         valueGetter: (value) => value.split('/').pop(),
+        renderCell: renderCodeFmt,
       },
       {
         field: 'currentStation',
         headerName: 'Curr. Station',
         description: 'The current station where the train is executing.',
         resizable: false,
-        width: 130,
+        width: 120,
         valueGetter: (value) => value.name,
+        renderCell: renderCodeFmt,
       },
       { field: 'creator', headerName: 'Creator', resizable: false, width: 120 },
       {
@@ -96,14 +103,16 @@ function JobTable() {
         field: 'createdAt',
         headerName: 'Created At',
         resizable: false,
-        width: 150,
+        sortable: false,
+        width: 160,
         valueGetter: formatDate,
       },
       {
         field: 'updatedAt',
         headerName: 'Updated At',
         resizable: false,
-        width: 150,
+        sortable: false,
+        width: 160,
         valueGetter: formatDate,
       },
       {
@@ -150,9 +159,6 @@ function JobTable() {
           paginationModel: {
             pageSize: 20,
           },
-        },
-        sorting: {
-          sortModel: [{ field: 'updatedAt', sort: 'desc' }],
         },
       }}
       slots={{ noRowsOverlay: EmptyRowsOverlay, toolbar: GridToolbar }}

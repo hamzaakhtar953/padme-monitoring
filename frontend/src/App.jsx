@@ -20,7 +20,10 @@ function App() {
           </AppLayout>
         </BrowserRouter>
         <Toaster />
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ReactQueryDevtools
+          buttonPosition="bottom-left"
+          initialIsOpen={false}
+        />
       </QueryClientProvider>
     </ThemeProvider>
   );

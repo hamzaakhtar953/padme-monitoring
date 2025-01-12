@@ -16,3 +16,17 @@ export async function getTrains({ signal }) {
     throwErrorBasedOnResponse(error);
   }
 }
+
+export async function getTrainDetails({ signal, trainId }) {
+  try {
+    const response = await axios.get(`/trains/${trainId}`, {
+      params: {
+        response_type: 'default',
+      },
+      signal,
+    });
+    return response.data;
+  } catch (error) {
+    throwErrorBasedOnResponse(error);
+  }
+}

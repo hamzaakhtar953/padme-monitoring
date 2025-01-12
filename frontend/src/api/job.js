@@ -16,3 +16,29 @@ export async function getJobs({ signal }) {
     throwErrorBasedOnResponse(error);
   }
 }
+
+export async function getJotDetails({ signal, jobId }) {
+  try {
+    const response = await axios.get(`/jobs/${jobId}`, {
+      params: {
+        response_type: 'default',
+      },
+      signal,
+    });
+    return response.data;
+  } catch (error) {
+    throwErrorBasedOnResponse(error);
+  }
+}
+
+export async function getJotMetrics({ signal, jobId, metric }) {
+  try {
+    const response = await axios.get(`/jobs/${jobId}/metrics`, {
+      params: { metric },
+      signal,
+    });
+    return response.data;
+  } catch (error) {
+    throwErrorBasedOnResponse(error);
+  }
+}
