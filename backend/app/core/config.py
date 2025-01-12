@@ -1,7 +1,16 @@
-from typing import Literal
+from typing import Annotated, Any, Literal
 
 from keycloak import KeycloakOpenID
+from pydantic import AnyUrl, computed_field, BeforeValidator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def parse_cors(v: Any) -> list[str] | str:
+    if isinstance(v, str) and not v.startswith("["):
+        return [i.strip() for i in v.split(",")]
+    elif isinstance(v, list | str):
+        return v
+    raise ValueError(v)
 
 
 class Settings(BaseSettings):
@@ -15,6 +24,18 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str
     DOMAIN: str
+    FRONTEND_HOST: str
+
+    BACKEND_CORS_ORIGINS: Annotated[
+        list[AnyUrl] | str, BeforeValidator(parse_cors)
+    ] = []
+    
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def all_cors_origins(self) -> list[str]:
+        return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
+            self.FRONTEND_HOST
+        ]
 
     DB_URL_DATABASE: str
     DB_URL_HOST: str

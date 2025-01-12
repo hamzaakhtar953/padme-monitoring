@@ -1,13 +1,15 @@
+from datetime import datetime
 from typing import Annotated
 import uuid
 
 from fastapi import APIRouter, HTTPException, Body, status
+from rdflib import Graph, Literal, RDF, XSD
 from rdflib.collection import Collection
-from rdflib.namespace import RDF
 
 from app import crud
 from app.api.deps import GraphDep
 from app.core.database import PHT, TrainNS, StationNS, JobNS, MemoryNS, CpuNS, NetworkNS
+from app.core.logger import logger
 from app.models import JobMetadataBase, JobMetricMetadataCreate, JobMetricMetadataDelete
 from app.utils import (
     convert_list_to_jsonld,
@@ -62,14 +64,45 @@ async def get_jobs(
             }
         )
 
+    # Sort by updatedAt in DESC order
+    jobs.sort(key=lambda job: job["updatedAt"], reverse=True)
+
     return jobs[offset : offset + limit]
 
 
 # TODO: Add filters i.e. last 7, 30, 90 days
-@router.get("/state")
+@router.get("/count")
 async def get_job_count_by_state(graph: GraphDep, state: JobState):
     total_subjects = len(set(graph.subjects(PHT.state, JobStateURI[state].value)))
-    return {"total": total_subjects}
+    return {"count": total_subjects}
+
+
+# TODO: Add filters i.e. last 7, 30, 90 days
+@router.get("/summary")
+async def get_job_summary_by_state(graph: GraphDep):
+    query = """
+    SELECT ?state (COUNT(?job) AS ?job_count)
+    WHERE {
+        ?job a pht:TrainExecution .
+        ?job pht:state ?state .
+    }
+    GROUP BY ?state
+    ORDER BY DESC(?job_count)
+    """
+
+    result = graph.query(query, initNs={"pht": PHT})
+
+    grouped_jobs = []
+    for row in result:
+        job_state = JobStateURI._value2member_map_[row.state].name
+        grouped_jobs.append(
+            {
+                "state": job_state,
+                "count": int(row.job_count),
+            }
+        )
+
+    return grouped_jobs
 
 
 @router.get("/{job_id}")
@@ -105,6 +138,7 @@ async def get_job_metadata(
     job_state = JobStateURI._value2member_map_[job_state_uri].name
 
     return {
+        "metadataUri": subject,
         "identifier": str(graph.value(subject, PHT.identifier)),
         "state": job_state,
         "creator": str(graph.value(subject, PHT.creator)),
@@ -152,7 +186,7 @@ async def create_job_metadata(graph: GraphDep, metadata: JobMetadataBase):
                 "pht:description": metadata.description,
                 "pht:currentStation": {"@id": StationNS[metadata.currentStation]},
                 "pht:trainId": {"@id": TrainNS[metadata.trainId]},
-                "pht:state": {"@id": PHT.trainStateIdle},
+                "pht:state": {"@id": JobStateURI.waiting.value},
                 "pht:plannedRoute": {
                     "@list": convert_list_to_jsonld(
                         items=metadata.plannedRoute, namespace=StationNS
@@ -204,7 +238,17 @@ async def update_job_status(
             detail=f"Job ({job_id}) metadata not found",
         )
 
+    # Update state
     graph.set((subject, PHT.state, JobStateURI[state].value))
+
+    # Update timestamp
+    graph.set(
+        (
+            subject,
+            PHT.updatedAt,
+            Literal(datetime.now(), datatype=XSD.dateTime),
+        )
+    )
 
 
 @router.put("/{job_id}/station", status_code=status.HTTP_204_NO_CONTENT)
@@ -223,7 +267,17 @@ async def update_job_current_station(
             detail=f"Job ({job_id}) metadata not found",
         )
 
+    # Update current station
     graph.set((subject, PHT.currentStation, StationNS[str(station_id)]))
+
+    # Update timestamp
+    graph.set(
+        (
+            subject,
+            PHT.updatedAt,
+            Literal(datetime.now(), datatype=XSD.dateTime),
+        )
+    )
 
 
 @router.get("/{job_id}/metrics")
@@ -257,10 +311,11 @@ async def get_job_metrics(graph: GraphDep, metric: MetricType, job_id: uuid.UUID
             }
         )
 
+    metrics["metrics"].sort(key=lambda job: job["timestamp"], reverse=True)
     return metrics
 
 
-@router.post("/{job_id}/metrics", status_code=status.HTTP_201_CREATED)
+@router.post("/{job_id}/metrics", status_code=status.HTTP_204_NO_CONTENT)
 async def create_job_metrics(
     graph: GraphDep,
     job_id: uuid.UUID,
@@ -306,9 +361,9 @@ async def create_job_metrics(
     event_uris = Collection(graph, collection)
     event_uris.append(metric_uri)
 
-    return payload
 
-
+# TODO: Implement subscriber pattern to delete all job metrics when job is finished.
+# TODO: Maybe use Rabbitmq for message passing.
 @router.delete("/{job_id}/metrics", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_job_metric(
     graph: GraphDep,

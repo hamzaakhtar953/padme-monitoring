@@ -21,11 +21,6 @@ async def get_train_triple_count(graph: GraphDep) -> dict:
     return await get_triple_count(graph, PHT.Train)
 
 
-@router.get("/clear")
-async def remove_all_triples(graph: GraphDep):
-    graph.remove((None, None, None))
-
-
 @router.get("/")
 async def get_all_trains(
     graph: GraphDep,
@@ -56,11 +51,14 @@ async def get_all_trains(
                 "description": str(graph.value(subject, PHT.description)),
                 "createdAt": str(graph.value(subject, PHT.createdAt)),
                 "analysisPurpose": str(graph.value(subject, PHT.analysisPurpose)),
+                "model": str(graph.value(subject, PHT.model)),
                 "updatedAt": str(graph.value(subject, PHT.updatedAt)),
                 "version": str(graph.value(subject, PHT.version)),
             }
         )
 
+    # Sort by updatedAt in DESC order
+    trains.sort(key=lambda job: job["updatedAt"], reverse=True)
     return trains[offset : offset + limit]
 
 
@@ -90,12 +88,14 @@ async def get_train_metadata(
         )
 
     return {
+        "metadataUri": subject,
         "identifier": str(graph.value(subject, PHT.identifier)),
         "title": str(graph.value(subject, PHT.title)),
         "creator": str(graph.value(subject, PHT.creator)),
         "publisher": str(graph.value(subject, PHT.publisher)),
         "description": str(graph.value(subject, PHT.description)),
         "analysisPurpose": str(graph.value(subject, PHT.analysisPurpose)),
+        "model": str(graph.value(subject, PHT.model)),
         "createdAt": str(graph.value(subject, PHT.createdAt)),
         "updatedAt": str(graph.value(subject, PHT.updatedAt)),
         "version": str(graph.value(subject, PHT.version)),
@@ -122,6 +122,7 @@ async def create_train_metadata(graph: GraphDep, metadata: TrainMetadataCreate):
         "pht:publisher": metadata.publisher,
         "pht:description": metadata.description,
         "pht:analysisPurpose": metadata.analysisPurpose,
+        "pht:model": metadata.model or "N/A",
         "pht:version": metadata.version,
         "pht:createdAt": metadata.createdAt,
         "pht:updatedAt": metadata.updatedAt,
@@ -152,10 +153,10 @@ async def update_train_metadata(
     for pred, _ in graph.predicate_objects(subject):
         predicate_name = pred.n3(graph.namespace_manager).split(":")[-1]
 
-        # Check request payload for new values
+        # Check if updated property exists in request payload
         new_value = metadata.model_dump().get(predicate_name)
 
-        # If property does not exists in request body, skip the iteration.
+        # If property does not exist in request body, skip the iteration.
         # There can be many properties such as rdf:type etc.
         if new_value is None:
             continue

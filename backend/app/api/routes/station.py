@@ -71,6 +71,8 @@ async def get_all_stations(
             }
         )
 
+    # Sort by updatedAt in DESC order
+    stations.sort(key=lambda job: job["updatedAt"], reverse=True)
     return stations[offset : offset + limit]
 
 
@@ -100,6 +102,7 @@ async def get_station_metadata(
 
     subject = StationNS[str(station_id)]
     return {
+        "metadataUri": subject,
         "identifier": str(graph.value(subject, PHT.identifier)),
         "title": str(graph.value(subject, PHT.title)),
         "stationOwner": str(graph.value(subject, PHT.stationOwner)),

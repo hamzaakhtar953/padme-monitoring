@@ -21,6 +21,7 @@ class TrainMetadataBase(BaseModel):
     description: str = Field(min_length=10, max_length=200)
     analysisPurpose: str = Field(min_length=10, max_length=200)
     version: str = Field(pattern=version_regex, default="1.0.0")
+    model: str | None = Field(min_length=3, max_length=50, default=None)
     createdAt: datetime = datetime.now()
     updatedAt: datetime = datetime.now()
 
@@ -31,6 +32,7 @@ class TrainMetadataUpdate(BaseModel):
     description: str | None = Field(min_length=10, max_length=200, default=None)
     analysisPurpose: str | None = Field(min_length=10, max_length=200, default=None)
     version: str | None = Field(pattern=version_regex, default=None)
+    model: str | None = Field(min_length=3, max_length=50, default=None)
     updatedAt: datetime = datetime.now()
 
 

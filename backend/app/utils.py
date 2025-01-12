@@ -14,21 +14,23 @@ class ResponseType(str, Enum):
 
 
 class JobState(str, Enum):
-    idle = "idle"
-    transmission = "transmission"
-    waiting = "waiting"
-    running = "running"
+    cancelled = "cancelled"
     failed = "failed"
     finished = "finished"
+    idle = "idle"
+    running = "running"
+    transmission = "transmission"
+    waiting = "waiting"
 
 
 class JobStateURI(Enum):
-    idle = PHT.trainStateIdle
-    transmission = PHT.trainStateTransmission
-    waiting = PHT.trainStateWaiting
-    running = PHT.trainStateRunning
+    cancelled = PHT.trainStateCancelled
     failed = PHT.trainStateFailed
     finished = PHT.trainStateFinished
+    idle = PHT.trainStateIdle
+    running = PHT.trainStateRunning
+    transmission = PHT.trainStateTransmission
+    waiting = PHT.trainStateWaiting
 
 
 class MetricType(str, Enum):
@@ -64,7 +66,7 @@ def query_subject_properties():
 
 async def get_triple_count(graph: GraphDep, rdf_type) -> dict:
     triple_count = len(set(graph.subjects(RDF.type, rdf_type)))
-    return {"total_triples": triple_count}
+    return {"count": triple_count}
 
 
 def convert_list_to_jsonld(items: list, namespace: Namespace):

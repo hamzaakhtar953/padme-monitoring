@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from rdflib_sqlalchemy import registerplugins
+from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import graph_singleton
@@ -24,6 +25,15 @@ app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 async def health_check():
     return {"status": "healthy"}
 
+
+if settings.all_cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.all_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Include all API routes
 app.include_router(api_router)
