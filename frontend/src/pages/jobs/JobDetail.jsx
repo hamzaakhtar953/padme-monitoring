@@ -14,9 +14,13 @@ import NetworkMetric from './metrics/Network';
 import { getJotDetails } from '../../api/job';
 import { formatDate } from '../../utils/helper';
 import { chipColor } from '../../components/chip';
+import { useJobSSE } from '../../hooks/useJobSSE';
 
 export default function JobDetailPage() {
   const { jobId } = useParams();
+
+  // Set up SSE listener for job details
+  useJobSSE();
 
   const {
     data: jobDetails,

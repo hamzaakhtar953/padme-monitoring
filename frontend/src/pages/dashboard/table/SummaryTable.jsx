@@ -15,9 +15,14 @@ import UpdateIcon from '@mui/icons-material/Update';
 import { chipColor } from '../../../components/chip';
 import { getJobs } from '../../../api/job';
 import { LightTooltip } from '../../../components/tooltip';
+import { useJobSSE } from '../../../hooks/useJobSSE';
 
 function SummaryTable() {
   const navigate = useNavigate();
+  
+  // Set up SSE listener for jobs
+  useJobSSE();
+  
   const {
     data: jobs,
     isLoading,

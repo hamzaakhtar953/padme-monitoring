@@ -11,6 +11,7 @@ import { getJobs } from '../../api/job';
 import { LightTooltip } from '../../components/tooltip';
 import { chipColor } from '../../components/chip';
 import { formatDate, renderRowIds } from '../../utils/helper';
+import { useJobSSE } from '../../hooks/useJobSSE';
 
 function renderCodeFmt(params) {
   return <code>{params.value}</code>;
@@ -19,6 +20,9 @@ function renderCodeFmt(params) {
 function JobTable() {
   const navigate = useNavigate();
   const [density, setDensity] = useState('comfortable');
+
+  // Set up SSE listener for jobs
+  useJobSSE();
 
   const {
     data: jobs,
