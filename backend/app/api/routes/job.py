@@ -1,10 +1,13 @@
+import asyncio
+import json
+import uuid
 from datetime import datetime
 from typing import Annotated
-import uuid
 
-from fastapi import APIRouter, HTTPException, Body, status
-from rdflib import Graph, Literal, RDF, XSD
+from fastapi import APIRouter, Body, HTTPException, Request, status
+from rdflib import Literal, RDF, XSD
 from rdflib.collection import Collection
+from sse_starlette.sse import EventSourceResponse
 
 from app import crud
 from app.api.deps import GraphDep
@@ -22,6 +25,9 @@ from app.utils import (
 )
 
 router = APIRouter()
+
+# Single broadcast channel for communicating job updates
+broadcast = asyncio.Queue()
 
 
 @router.get("/")
@@ -103,6 +109,25 @@ async def get_job_summary_by_state(graph: GraphDep):
         )
 
     return grouped_jobs
+
+
+@router.get("/sse")
+async def sse_jobs(request: Request):
+    async def event_generator():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                # Wait for new data from broadcast channel
+                job_payload = await broadcast.get()
+
+                yield {"event": "job_update", "data": job_payload}
+
+        except asyncio.CancelledError:
+            pass
+
+    return EventSourceResponse(event_generator())
 
 
 @router.get("/{job_id}")
@@ -204,7 +229,14 @@ async def create_job_metadata(graph: GraphDep, metadata: JobMetadataBase):
     }
 
     graph.parse(data=payload, format="json-ld")
-    return payload
+
+    # Get the entire job object
+    job_payload = await get_job_metadata(
+        graph, metadata.identifier, response_type=ResponseType.default
+    )
+    # Broadcast to all connected clients
+    await broadcast.put(json.dumps(job_payload))
+    return job_payload
 
 
 @router.get("/{job_id}/status")
@@ -229,6 +261,9 @@ async def update_job_status(
     job_id: uuid.UUID,
     state: JobState,
 ):
+    """
+    TODO: If status is in [cancelled, finished, failed], empty the job metrics Collection
+    """
     subject = JobNS[str(job_id)]
     triple = (subject, None, None)
 
@@ -238,17 +273,17 @@ async def update_job_status(
             detail=f"Job ({job_id}) metadata not found",
         )
 
-    # Update state
+    # Update job state and timestamp
     graph.set((subject, PHT.state, JobStateURI[state].value))
+    graph.set((subject, PHT.updatedAt, Literal(datetime.now(), datatype=XSD.dateTime)))
 
-    # Update timestamp
-    graph.set(
-        (
-            subject,
-            PHT.updatedAt,
-            Literal(datetime.now(), datatype=XSD.dateTime),
-        )
+    # Get the entire job object
+    job_payload = await get_job_metadata(
+        graph, job_id, response_type=ResponseType.default
     )
+
+    # Broadcast to all connected clients
+    await broadcast.put(json.dumps(job_payload))
 
 
 @router.put("/{job_id}/station", status_code=status.HTTP_204_NO_CONTENT)
@@ -267,17 +302,17 @@ async def update_job_current_station(
             detail=f"Job ({job_id}) metadata not found",
         )
 
-    # Update current station
+    # Update current station and timestamp
     graph.set((subject, PHT.currentStation, StationNS[str(station_id)]))
+    graph.set((subject, PHT.updatedAt, Literal(datetime.now(), datatype=XSD.dateTime)))
 
-    # Update timestamp
-    graph.set(
-        (
-            subject,
-            PHT.updatedAt,
-            Literal(datetime.now(), datatype=XSD.dateTime),
-        )
+    # Get the entire job object
+    job_payload = await get_job_metadata(
+        graph, job_id, response_type=ResponseType.default
     )
+
+    # Broadcast to all connected clients
+    await broadcast.put(json.dumps(job_payload))
 
 
 @router.get("/{job_id}/metrics")
@@ -321,6 +356,9 @@ async def create_job_metrics(
     job_id: uuid.UUID,
     metadata: JobMetricMetadataCreate,
 ):
+    """
+    TODO: Only create metrics if job status is [running].
+    """
     subject = JobNS[str(job_id)]
     triple = (subject, None, None)
 
