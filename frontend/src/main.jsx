@@ -7,22 +7,14 @@ import App from './App.jsx';
 import KeycloakService from './service/keycloak.js';
 import { configureAxios } from './service/axios.js';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <StyledEngineProvider injectFirst>
-      <App />
-    </StyledEngineProvider>
-  </StrictMode>
-);
+const renderApp = () =>
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <StyledEngineProvider injectFirst>
+        <App />
+      </StyledEngineProvider>
+    </StrictMode>
+  );
 
-// const renderApp = () =>
-//   createRoot(document.getElementById('root')).render(
-//     <StrictMode>
-//       <StyledEngineProvider injectFirst>
-//         <App />
-//       </StyledEngineProvider>
-//     </StrictMode>
-//   );
-
-// KeycloakService.initialize(renderApp);
-// configureAxios();
+KeycloakService.initialize(renderApp);
+configureAxios();

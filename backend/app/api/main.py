@@ -25,5 +25,4 @@ api_router.include_router(
     job.router,
     prefix="/jobs",
     tags=["jobs"],
-    dependencies=[Depends(auth.get_user_info)],
 )
