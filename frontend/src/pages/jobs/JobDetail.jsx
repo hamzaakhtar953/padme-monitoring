@@ -15,12 +15,14 @@ import { getJotDetails } from '../../api/job';
 import { formatDate } from '../../utils/helper';
 import { chipColor } from '../../components/chip';
 import { useJobSSE } from '../../hooks/useJobSSE';
+import { useMetricSSE } from '../../hooks/useMetricSSE';
 
 export default function JobDetailPage() {
   const { jobId } = useParams();
 
-  // Set up SSE listener for job details
+  // Set up SSE listener for job and metric updates
   useJobSSE();
+  useMetricSSE(jobId)
 
   const {
     data: jobDetails,
@@ -41,7 +43,7 @@ export default function JobDetailPage() {
       <Stack
         direction={{ sm: 'column', md: 'row' }}
         justifyContent="space-between"
-        spacing={2}
+        gap={2}
       >
         <Stack spacing={1.5}>
           <Typography variant="h4" fontWeight="bold">
@@ -58,34 +60,27 @@ export default function JobDetailPage() {
           </Stack>
         </Stack>
         {/* METRICS */}
-        <Stack
-          direction="row"
-          justifyContent={{ sm: 'space-between' }}
-          spacing={2}
-        >
-          {/* CPU */}
-          <CpuMetric jobId={jobId} />
-          {/* RAM */}
-          <MemoryMetric jobId={jobId} />
-          {/* Network */}
-          <NetworkMetric jobId={jobId} />
-        </Stack>
+        <Paper className="h-full rounded-xl" elevation={0} sx={{ padding: 3 }}>
+          <Stack spacing={1}>
+            <Typography className="font-bold text-stone-600">
+              Description
+            </Typography>
+            <Typography>{jobDetails?.description}</Typography>
+          </Stack>
+        </Paper>
       </Stack>
       <Grid container mt={3} spacing={2}>
         {/* Description */}
-        <Grid size={{ md: 5, xs: 12 }}>
-          <Paper
-            className="h-full rounded-xl"
-            elevation={0}
-            sx={{ padding: 3 }}
-          >
-            <Stack spacing={1}>
-              <Typography className="font-bold text-stone-600">
-                Description
-              </Typography>
-              <Typography>{jobDetails?.description}</Typography>
-            </Stack>
-          </Paper>
+        <Grid container size={{ md: 5, xs: 12 }}>
+          <Grid size={{ xs: 6 }}>
+            <CpuMetric jobId={jobId} />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <MemoryMetric jobId={jobId} />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <NetworkMetric jobId={jobId} />
+          </Grid>
         </Grid>
         {/* Other Details */}
         <Grid size={{ md: 7, xs: 12 }}>

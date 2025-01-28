@@ -26,8 +26,11 @@ from app.utils import (
 
 router = APIRouter()
 
-# Single broadcast channel for communicating job updates
-broadcast = asyncio.Queue()
+# Broadcast channel for communicating job and metric updates
+job_broadcast = asyncio.Queue()
+metric_broadcast = asyncio.Queue()
+
+METRICS_BUFFER_SIZE = 1000
 
 
 @router.get("/")
@@ -112,7 +115,7 @@ async def get_job_summary_by_state(graph: GraphDep):
 
 
 @router.get("/sse")
-async def sse_jobs(request: Request):
+async def job_sse(request: Request):
     async def event_generator():
         try:
             while True:
@@ -120,7 +123,7 @@ async def sse_jobs(request: Request):
                     break
 
                 # Wait for new data from broadcast channel
-                job_payload = await broadcast.get()
+                job_payload = await job_broadcast.get()
 
                 yield {"event": "job_update", "data": job_payload}
 
@@ -177,6 +180,8 @@ async def get_job_metadata(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_job_metadata(graph: GraphDep, metadata: JobMetadataBase):
+    logger.info(f"Creating metadata for job {metadata.identifier}")
+
     job_id = str(metadata.identifier)
     triple = (JobNS[job_id], None, None)
 
@@ -235,7 +240,7 @@ async def create_job_metadata(graph: GraphDep, metadata: JobMetadataBase):
         graph, metadata.identifier, response_type=ResponseType.default
     )
     # Broadcast to all connected clients
-    await broadcast.put(json.dumps(job_payload))
+    await job_broadcast.put(json.dumps(job_payload))
     return job_payload
 
 
@@ -263,7 +268,9 @@ async def update_job_status(
 ):
     """
     TODO: If status is in [cancelled, finished, failed], empty the job metrics Collection
+    and individually delete each metric URI
     """
+    logger.info(f"Updating job {job_id} status to {state.value}")
     subject = JobNS[str(job_id)]
     triple = (subject, None, None)
 
@@ -283,7 +290,7 @@ async def update_job_status(
     )
 
     # Broadcast to all connected clients
-    await broadcast.put(json.dumps(job_payload))
+    await job_broadcast.put(json.dumps(job_payload))
 
 
 @router.put("/{job_id}/station", status_code=status.HTTP_204_NO_CONTENT)
@@ -292,6 +299,7 @@ async def update_job_current_station(
     job_id: uuid.UUID,
     station_id: Annotated[uuid.UUID, Body(embed=True)],
 ):
+    logger.info(f"Updating job {job_id} station to {station_id}")
     subject = JobNS[str(job_id)]
     triple = (subject, None, None)
 
@@ -312,11 +320,35 @@ async def update_job_current_station(
     )
 
     # Broadcast to all connected clients
-    await broadcast.put(json.dumps(job_payload))
+    await job_broadcast.put(json.dumps(job_payload))
+
+
+@router.get("/{job_id}/metrics/sse")
+async def job_metrics_sse(request: Request):
+    async def event_generator():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                # Wait for new data from broadcast channel
+                metric_payload = await metric_broadcast.get()
+
+                yield {"event": "metric_update", "data": metric_payload}
+
+        except asyncio.CancelledError:
+            pass
+
+    return EventSourceResponse(event_generator())
 
 
 @router.get("/{job_id}/metrics")
-async def get_job_metrics(graph: GraphDep, metric: MetricType, job_id: uuid.UUID):
+async def get_job_metrics(
+    graph: GraphDep,
+    metric: MetricType,
+    job_id: uuid.UUID,
+    sort_desc: bool = True,
+):
     subject = JobNS[str(job_id)]
     triple = (subject, None, None)
 
@@ -336,17 +368,24 @@ async def get_job_metrics(graph: GraphDep, metric: MetricType, job_id: uuid.UUID
         if (uri, RDF.type, MetricTypeURI[metric].value) not in graph:
             continue
 
-        metrics["metrics"].append(
-            {
-                "id": uri.n3(ns_manager),
-                "jobId": graph.value(uri, PHT.hasJobId),
-                "stationId": graph.value(uri, PHT.hasStationId),
-                "timestamp": graph.value(uri, PHT.eventTimestamp),
-                "value": graph.value(uri, PHT.value),
-            }
-        )
+        metric_payload = {
+            "id": uri.n3(ns_manager),
+            "jobId": graph.value(uri, PHT.hasJobId),
+            "stationId": graph.value(uri, PHT.hasStationId),
+            "timestamp": graph.value(uri, PHT.eventTimestamp),
+            **(
+                {
+                    "rxBytes": int(graph.value(uri, PHT.hasRxBytes)),
+                    "txBytes": int(graph.value(uri, PHT.hasTxBytes)),
+                }
+                if metric is MetricType.network
+                else {"value": graph.value(uri, PHT.value)}
+            ),
+        }
 
-    metrics["metrics"].sort(key=lambda job: job["timestamp"], reverse=True)
+        metrics["metrics"].append(metric_payload)
+
+    metrics["metrics"].sort(key=lambda job: job["timestamp"], reverse=sort_desc)
     return metrics
 
 
@@ -359,6 +398,8 @@ async def create_job_metrics(
     """
     TODO: Only create metrics if job status is [running].
     """
+    logger.info(f"Creating {metadata.metric_type.value} metrics for job {job_id}")
+
     subject = JobNS[str(job_id)]
     triple = (subject, None, None)
 
@@ -372,6 +413,7 @@ async def create_job_metrics(
     metric_namespace = MetricNamespace[metadata.metric_type].value
     metric_uri = metric_namespace[metric_id]
 
+    is_network_metric = metadata.metric_type is MetricType.network
     payload = {
         "@context": {
             "pht": str(PHT),
@@ -386,7 +428,14 @@ async def create_job_metrics(
                 "pht:eventTimestamp": metadata.timestamp,
                 "pht:hasJobId": job_id,
                 "pht:hasStationId": metadata.station_id,
-                "pht:value": metadata.value,
+                **(
+                    {
+                        "pht:hasRxBytes": metadata.rx_bytes,
+                        "pht:hasTxBytes": metadata.tx_bytes,
+                    }
+                    if is_network_metric
+                    else {"pht:value": metadata.value}
+                ),
             },
         ],
     }
@@ -394,10 +443,33 @@ async def create_job_metrics(
     # Add event metadata to database
     graph.parse(data=payload, format="json-ld")
 
-    # Add event to the PHT job event list
+    # Fetch metric collection for job
     collection = graph.value(subject, PHT.event)
     event_uris = Collection(graph, collection)
+
+    # Clear the event collection if buffer exceeds
+    if len(event_uris) > METRICS_BUFFER_SIZE:
+        logger.warning(
+            f"Metric buffer exceeded. Clearing previous events for job {job_id}"
+        )
+        for uri in event_uris:
+            graph.remove((uri, None, None))
+
+        event_uris.clear()
+
+    # Add new event to the job event list
     event_uris.append(metric_uri)
+
+    # Get updated job metrics
+    metric_payload = await get_job_metrics(
+        graph,
+        metric=metadata.metric_type,
+        job_id=job_id,
+        sort_desc=not is_network_metric,
+    )
+
+    # Broadcast metric updates to all connected clients
+    await metric_broadcast.put(json.dumps(metric_payload))
 
 
 # TODO: Implement subscriber pattern to delete all job metrics when job is finished.

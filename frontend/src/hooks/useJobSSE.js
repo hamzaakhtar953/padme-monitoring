@@ -30,7 +30,7 @@ export const useJobSSE = () => {
     });
 
     eventSource.onerror = (error) => {
-      console.error('SSE error:', error);
+      console.error('Job SSE error:', error);
     };
 
     return () => {

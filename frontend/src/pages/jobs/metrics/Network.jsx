@@ -1,28 +1,30 @@
+import { format, parseISO } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
+import { LineChart } from '@mui/x-charts/LineChart';
 import toast from 'react-hot-toast';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
-import { getGaugeColor } from '../../../utils/helper';
 import { getJotMetrics } from '../../../api/job';
+
+function formatDate(dateStr) {
+  const date = parseISO(dateStr);
+  return format(date, 'HH:mm:ss');
+}
 
 export default function NetworkMetric({ jobId }) {
   const {
     data: events,
+    isLoading,
     isError,
     error,
   } = useQuery({
     queryKey: ['jobs', { id: jobId, metric: 'network' }],
     queryFn: ({ signal }) =>
-      getJotMetrics({ signal, jobId, metric: 'network' }),
+      getJotMetrics({ signal, jobId, metric: 'network', sortDesc: false }),
     gcTime: 30000,
   });
-
-  const value = parseFloat(
-    events?.metrics.length > 0 ? events.metrics[0].value : '0'
-  );
 
   if (isError) toast.error(error.message);
 
@@ -32,22 +34,42 @@ export default function NetworkMetric({ jobId }) {
         <Typography className="text-sm font-bold uppercase text-gray-500">
           Network Usage
         </Typography>
-        <Gauge
-          width={150}
-          height={150}
-          value={value}
-          startAngle={-110}
-          endAngle={110}
-          innerRadius="70%"
-          text={(prop) => `${prop.value}%`}
-          sx={{
-            [`& .${gaugeClasses.valueText}`]: {
-              fontSize: 28,
-              fontWeight: 600,
-              transform: 'translate(0px, 0px)',
+        <LineChart
+          dataset={events?.metrics || []}
+          grid={{ horizontal: true }}
+          loading={isLoading}
+          xAxis={[
+            {
+              id: 'Years',
+              dataKey: 'timestamp',
+              scaleType: 'point',
+              valueFormatter: (date) => formatDate(date, 'HH:mm:ss'),
             },
-            [`& .${gaugeClasses.valueArc}`]: {
-              fill: getGaugeColor(value),
+          ]}
+          series={[
+            {
+              id: 'ReceivedBytes',
+              label: 'Bytes received (rx)',
+              dataKey: 'rxBytes',
+              stack: 'total',
+              area: true,
+              showMark: false,
+            },
+            {
+              id: 'TransmittedBytes',
+              label: 'Bytes transmitted (tx)',
+              dataKey: 'txBytes',
+              stack: 'total',
+              area: true,
+              showMark: false,
+            },
+          ]}
+          width={500}
+          height={280}
+          margin={{ left: 70 }}
+          slotProps={{
+            legend: {
+              hidden: true,
             },
           }}
         />

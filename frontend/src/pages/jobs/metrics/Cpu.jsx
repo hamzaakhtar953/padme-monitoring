@@ -15,12 +15,13 @@ export default function CpuMetric({ jobId }) {
     error,
   } = useQuery({
     queryKey: ['jobs', { id: jobId, metric: 'cpu' }],
-    queryFn: ({ signal }) => getJotMetrics({ signal, jobId, metric: 'cpu' }),
+    queryFn: ({ signal }) =>
+      getJotMetrics({ signal, jobId, metric: 'cpu', sortDesc: true }),
     gcTime: 30000,
   });
 
   const value = parseFloat(
-    events?.metrics.length > 0 ? events.metrics[0].value : '0'
+    events?.metrics?.length > 0 ? events.metrics[0].value : '0'
   );
 
   if (isError) toast.error(error.message);
@@ -41,7 +42,7 @@ export default function CpuMetric({ jobId }) {
           text={(prop) => `${prop.value}%`}
           sx={{
             [`& .${gaugeClasses.valueText}`]: {
-              fontSize: 28,
+              fontSize: 20,
               fontWeight: 600,
               transform: 'translate(0px, 0px)',
             },

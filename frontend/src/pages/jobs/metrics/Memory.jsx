@@ -15,7 +15,8 @@ export default function MemoryMetric({ jobId }) {
     error,
   } = useQuery({
     queryKey: ['jobs', { id: jobId, metric: 'memory' }],
-    queryFn: ({ signal }) => getJotMetrics({ signal, jobId, metric: 'memory' }),
+    queryFn: ({ signal }) =>
+      getJotMetrics({ signal, jobId, metric: 'memory', sortDesc: true }),
     gcTime: 30000,
   });
 
@@ -41,7 +42,7 @@ export default function MemoryMetric({ jobId }) {
           text={(prop) => `${prop.value}%`}
           sx={{
             [`& .${gaugeClasses.valueText}`]: {
-              fontSize: 28,
+              fontSize: 20,
               fontWeight: 600,
               transform: 'translate(0px, 0px)',
             },

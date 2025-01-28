@@ -31,10 +31,10 @@ export async function getJotDetails({ signal, jobId }) {
   }
 }
 
-export async function getJotMetrics({ signal, jobId, metric }) {
+export async function getJotMetrics({ signal, jobId, metric, sortDesc }) {
   try {
     const response = await axios.get(`/jobs/${jobId}/metrics`, {
-      params: { metric },
+      params: { metric, sort_desc: sortDesc },
       signal,
     });
     return response.data;

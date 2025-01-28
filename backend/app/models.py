@@ -1,7 +1,7 @@
 import uuid
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from app.utils import MetricType
@@ -85,11 +85,28 @@ class JobMetadataBase(BaseModel):
     updatedAt: datetime = datetime.now()
 
 
-class JobMetricMetadataCreate(BaseModel):
-    metric_type: MetricType = Field(default=MetricType.cpu)
+class BaseJobMetric(BaseModel):
     station_id: uuid.UUID
-    value: str = Field(min_length=1, max_length=50)
     timestamp: datetime = datetime.now()
+
+
+class ResourceMetric(BaseJobMetric):
+    metric_type: Annotated[
+        Literal[MetricType.cpu, MetricType.memory],
+        Field(description="CPU or Memory metric type"),
+    ]
+    value: str = Field(min_length=1, max_length=50)
+
+
+class NetworkMetric(BaseJobMetric):
+    metric_type: Literal[MetricType.network]
+    rx_bytes: str = Field(min_length=1, max_length=50)
+    tx_bytes: str = Field(min_length=1, max_length=50)
+
+
+JobMetricMetadataCreate = Annotated[
+    ResourceMetric | NetworkMetric, Field(discriminator="metric_type")
+]
 
 
 class JobMetricMetadataDelete(BaseModel):
