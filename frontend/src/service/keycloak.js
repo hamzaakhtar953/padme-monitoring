@@ -14,6 +14,7 @@ const initialize = async (onAuthenticatedCallback) => {
   try {
     const authenticated = await keycloak.init({ onLoad: 'login-required' });
     if (authenticated) {
+      console.log('Successfully authenticated keycloak. Starting Vite app...');
       onAuthenticatedCallback();
     } else {
       console.warn('Not authenticated, redirecting to login.');
