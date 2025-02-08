@@ -13,7 +13,11 @@ services:
       POSTGRES_USER: ${MONITORING_SERVICE_DB_USERNAME}
       POSTGRES_PASSWORD: ${MONITORING_SERVICE_DB_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${MONITORING_SERVICE_DB_USERNAME} -d ${MONITORING_SERVICE_DB_URL_DATABASE}",
+        ]
       interval: 10s
       retries: 5
       start_period: 30s
