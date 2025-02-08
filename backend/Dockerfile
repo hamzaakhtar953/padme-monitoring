@@ -40,6 +40,6 @@ COPY ./app /app/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-EXPOSE 80
+EXPOSE 8000
 
 CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
