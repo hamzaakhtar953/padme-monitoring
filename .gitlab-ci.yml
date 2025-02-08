@@ -6,6 +6,19 @@ variables:
   BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend
   FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend
 
+build_backend:
+  image: docker:23-dind
+  stage: build 📦
+  before_script:
+    - echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - echo "Building Monitoring Backend Docker Image 🚧"
+    - cd backend
+    - docker build --pull -t $BACKEND_IMAGE:$CI_COMMIT_SHA -t $BACKEND_IMAGE:$CI_COMMIT_BRANCH .
+    - docker push $BACKEND_IMAGE:$CI_COMMIT_SHA
+    - docker push $BACKEND_IMAGE:$CI_COMMIT_BRANCH
+    - echo "Monitoring Backend Build Complete 🚧"
+
 .build_frontend:
   image: docker:23-dind
   stage: build 📦
@@ -19,9 +32,9 @@ variables:
   script:
     - echo "Building Monitoring Frontend Docker Image 🚧"
     - cd frontend
-    - docker build --pull -t $FRONTEND_IMAGE:$CI_COMMIT_SHA -t $FRONTEND_IMAGE:$CI_COMMIT_REF_NAME .
+    - docker build --pull -t $FRONTEND_IMAGE:$CI_COMMIT_SHA -t $FRONTEND_IMAGE:$CI_COMMIT_BRANCH .
     - docker push $FRONTEND_IMAGE:$CI_COMMIT_SHA
-    - docker push $FRONTEND_IMAGE:$CI_COMMIT_REF_NAME
+    - docker push $FRONTEND_IMAGE:$CI_COMMIT_BRANCH
     - echo "Monitoring Frontend Build Complete 🚧"
 
 build_frontend_staging:
