@@ -8,7 +8,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 
-import CpuMetric from './metrics/CPU';
+import CpuMetric from './metrics/Cpu';
 import MemoryMetric from './metrics/Memory';
 import NetworkMetric from './metrics/Network';
 import { getJotDetails } from '../../api/job';
