@@ -34,6 +34,7 @@ build_backend:
   script:
     - echo "Building Monitoring Frontend Docker Image 🚧"
     - cd frontend
+    - env | grep '^FRONTEND_' >> .env || true
     - docker build --pull -t $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_SHA -t $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_BRANCH .
     - docker push $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_BRANCH
