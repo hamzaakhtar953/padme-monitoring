@@ -26,8 +26,7 @@ export default function PageNotFound() {
             sx={{
               display: 'inline-block',
               height: 'auto',
-              maxWidth: '80%',
-              width: '400px',
+              width: '50%',
             }}
           />
         </Box>

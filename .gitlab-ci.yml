@@ -1,0 +1,39 @@
+stages:
+  - build 📦
+  # - deploy 🚅
+
+variables:
+  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend
+  FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend
+
+.build_frontend:
+  image: docker:23-dind
+  stage: build 📦
+  variables:
+    FRONTEND_API_URL: https://monitoringapi.${SERVICE_DOMAIN}
+    FRONTEND_KEYCLOAK_SERVER_URL: https://auth.${PROD_SERVICE_DOMAIN}/auth
+    FRONTEND_KEYCLOAK_REALM: ${MONITORING_SERVICE_REALM}
+    FRONTEND_KEYCLOAK_CLIENT_ID: ${MONITORING_SERVICE_FRONTNED_CLIENT_ID}
+  before_script:
+    - echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - echo "Building Monitoring Frontend Docker Image 🚧"
+    - cd frontend
+    - docker build --pull -t $FRONTEND_IMAGE:$CI_COMMIT_SHA -t $FRONTEND_IMAGE:$CI_COMMIT_REF_NAME .
+    - docker push $FRONTEND_IMAGE:$CI_COMMIT_SHA
+    - docker push $FRONTEND_IMAGE:$CI_COMMIT_REF_NAME
+    - echo "Monitoring Frontend Build Complete 🚧"
+
+build_frontend_staging:
+  extends: .build_frontend
+  environment:
+    name: staging
+  only:
+    - prerelease
+
+build_frontend_production:
+  extends: .build_frontend
+  environment:
+    name: production
+  only:
+    - main

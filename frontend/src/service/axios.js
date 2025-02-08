@@ -4,7 +4,7 @@ import config from '../config';
 import KeycloakService from './keycloak';
 
 const axiosInstance = axios.create({
-  baseURL: config.isDevMode ? 'http://localhost:8000' : undefined,
+  baseURL: config.apiUrl,
   headers: { 'Content-Type': 'application/json' },
 });
 

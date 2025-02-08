@@ -2,13 +2,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import config from '../config';
 
-const API_URL = config.isDevMode ? 'http://localhost:8000' : '/';
-
 export const useJobSSE = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const eventSource = new EventSource(`${API_URL}/jobs/sse`);
+    const eventSource = new EventSource(`${config.apiUrl}/jobs/sse`);
 
     eventSource.addEventListener('job_update', (event) => {
       const updatedJob = JSON.parse(event.data);
