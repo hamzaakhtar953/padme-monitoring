@@ -37,7 +37,7 @@ build_backend:
     - docker build --pull -t $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_SHA -t $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_BRANCH .
     - docker push $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_FRONTEND_IMAGE:$CI_COMMIT_BRANCH
-    - echo "Monitoring Frontend Build Complete 🚧"
+    - echo "Monitoring Frontend Build Complete 🚧 "
 
 build_frontend_staging:
   extends: .build_frontend
