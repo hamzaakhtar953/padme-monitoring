@@ -58,7 +58,7 @@ build_frontend_production:
   image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/deployment/image:main
   stage: deploy 🚅
   environment:
-    url: https://playground.${SERVICE_DOMAIN}
+    url: https://monitoring.${SERVICE_DOMAIN}
   before_script:
     - ssh-add <(echo "$DEPLOYMENT_TARGET_SSH_KEY")
   script:
